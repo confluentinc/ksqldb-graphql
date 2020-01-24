@@ -1,0 +1,13 @@
+{
+  "name": "@ksqldb-graphql/rideshare-server",
+  "version": "0.0.0",
+  "description": "rideshare server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/confluentinc/ksqldb-graphql.git"
+  },
+  "homepage": "https://github.com/confluentinc/ksqldb-graphql/blob/master/packages/rideshare",
+  "license": "UNLICENSED",
+  "main": "src/index.ts",
+  "module": "src/index.ts"
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@ksqldb-graphql/rideshare",
+  "version": "0.0.0",
+  "description": "rideshare example",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/confluentinc/ksqldb-graphql.git"
+  },
+  "homepage": "https://github.com/confluentinc/ksqldb-graphql/blob/master/packages/rideshare",
+  "license": "UNLICENSED",
+  "main": "client/src/index.js",
+  "module": "client/src/index.js",
+  "files": [
+    "client/src",
+    "server/src"
+  ],
+  "scripts": {
+    "lint": "eslint . --report-unused-disable-directives --ext .tsx,.js",
+    "client": "react-scripts start",
+    "server": "yarn nodemon -w server/* src/server/src/index.ts"
+  },
+  "dependencies": {
+    "react-scripts": "3.3.0"
+  }
+}
