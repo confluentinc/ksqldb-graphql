@@ -26,7 +26,8 @@
   },
   "scripts": {
     "lint": "eslint . --report-unused-disable-directives --ext .tsx,.js",
-    "in": "yarn install --frozen-lockfile --prefer-offline"
+    "in": "yarn install --frozen-lockfile --prefer-offline",
+    "test": "yarn workspace @ksql/graphql test"
   },
   "eslintConfig": {
     "extends": "react-app"
