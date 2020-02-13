@@ -15,7 +15,7 @@
     "@types/react": "16.9.17",
     "@types/react-dom": "16.9.4",
     "apollo-boost": "0.4.7",
-    "apollo-server": "2.9.16",
+    "apollo-server": "2.10.0",
     "google-maps-react": "2.0.2",
     "graphql": "14.6.0",
     "react": "16.12.0",
