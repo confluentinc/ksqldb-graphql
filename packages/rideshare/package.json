@@ -20,6 +20,6 @@
     "server": "yarn nodemon -w server/* src/server/src/index.ts"
   },
   "dependencies": {
-    "react-scripts": "3.3.0"
+    "react-scripts": "3.3.1"
   }
 }
