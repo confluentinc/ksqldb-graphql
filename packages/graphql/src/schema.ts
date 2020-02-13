@@ -6,20 +6,49 @@ import {
   GraphQLObjectType,
   printSchema,
 } from 'graphql';
+import axios from 'axios';
 
-const axios = require('axios');
+import { generateResolvers } from './resolvers';
 
-type KsqlType = 'BIGINT' | 'STRING' | 'INTEGER' | 'ARRAY' | 'VARCHAR';
-type Field = {
+export interface Config {
+  ksqlUrl: string;
+  subscription: any;
+}
+
+type KsqlType = 'BIGINT' | 'STRING' | 'INTEGER' | 'ARRAY' | 'VARCHAR' | 'STRUCT';
+type MemberSchema = {
+  type: Exclude<'ARRAY' | 'STRUCT', KsqlType>; // TODO - can you have arrays in member schemas?
+};
+export interface Field {
   name: string;
   schema: {
     type: KsqlType;
-    fields: Array<Field>;
-    memberSchema: {
-      type: Exclude<'ARRAY', KsqlType>; // TODO - can you have arrays in member schemas?
-    };
+    fields: Array<Field> | null;
+    memberSchema: MemberSchema | null;
+  };
+}
+type KSqlEntities = {
+  [key: string]: {
+    type: GraphQLObjectType;
   };
 };
+type KsqlResponse = {
+  name: string;
+  readQueries: Array<any>; // TODO
+  writeQueries: Array<any>; // TOOD
+  fields: Array<Field>;
+  type: 'STREAM' | 'TABLE';
+  key: string;
+  timestamp: string;
+  statistics: string;
+  errorStats: string;
+  extended: boolean;
+  format: 'JSON' | 'AVRO'; // TODO verify this value
+  topic: string;
+  partitions: number;
+  replication: number;
+};
+
 const TypeMap = {
   STRING: GraphQLString,
   VARCHAR: GraphQLString,
@@ -31,9 +60,10 @@ const TypeMap = {
     BIGINT: new GraphQLList(GraphQLInt),
     INTEGER: new GraphQLList(GraphQLInt),
   },
+  STRUCT: {}, // MemberSchema exclude not excluding this?
 };
 
-const setSchemaType = (accum: any, field: Field) => {
+const setSchemaType = (accum: any, field: Field): void => {
   if (TypeMap[field.schema.type] == null) {
     // eslint-disable-next-line
     console.error(`type ${field.schema.type} is not supported`);
@@ -50,7 +80,7 @@ const setSchemaType = (accum: any, field: Field) => {
   }
 };
 
-const buildSchemaObject = (accum: any, field: Field) => {
+const buildSchemaObject = (accum: KSqlEntities, field: Field): KSqlEntities => {
   if (field.schema.fields == null) {
     setSchemaType(accum, field);
   } else if (Array.isArray(field.schema.fields)) {
@@ -65,11 +95,22 @@ const buildSchemaObject = (accum: any, field: Field) => {
   return accum;
 };
 
-export const generateSchemaFromKsql = ({ name, fields }: { name: string; fields: Array<any> }) => {
-  return new GraphQLObjectType({ name, fields: fields.reduce(buildSchemaObject, {}) });
+export const generateSchemaFromKsql = ({ name, fields }: KsqlResponse): GraphQLObjectType => {
+  const schemaFields = fields.reduce(buildSchemaObject, {});
+  return new GraphQLObjectType({
+    name,
+    fields: {
+      ...schemaFields,
+      command: {
+        type: GraphQLString,
+      },
+    },
+  });
 };
 
-const schemas = async (ksqlUrl: string, config?: any) => {
+const schemas = async (
+  ksqlUrl: string
+): Promise<{ schema: GraphQLSchema; fields: KSqlEntities } | undefined> => {
   const endpoint = `${ksqlUrl}/ksql`;
   try {
     const response = await axios.post(endpoint, {
@@ -78,11 +119,11 @@ const schemas = async (ksqlUrl: string, config?: any) => {
 
     if (response.status !== 200) {
       // eslint-disable-next-line
-      console.error(`request to ksql failed`, config.url, config.data);
+      console.error(`request to ksql failed`, ksqlUrl, response);
       return;
     }
     const schemas: GraphQLObjectType[] = [];
-    const streams = response.data[0].sourceDescriptions;
+    const streams: Array<KsqlResponse> = response.data[0].sourceDescriptions;
 
     for (const stream of streams) {
       schemas.push(generateSchemaFromKsql(stream));
@@ -97,21 +138,34 @@ const schemas = async (ksqlUrl: string, config?: any) => {
     );
 
     const queryType = new GraphQLObjectType({ name: 'Query', fields: queryFields });
-    const gqlSchema = new GraphQLSchema({ query: queryType });
+    const subscriptionType = new GraphQLObjectType({ name: 'Subscription', fields: queryFields });
+    const gqlSchema = new GraphQLSchema({ query: queryType, subscription: subscriptionType });
 
     // eslint-disable-next-line
     console.log(printSchema(gqlSchema));
-    return new GraphQLSchema({ query: queryType });
+    return { schema: gqlSchema, fields: queryFields };
   } catch (e) {
     // eslint-disable-next-line
     console.error(`unable to connect to ksql`, ksqlUrl);
   }
 };
-export function getKsqlSchemas(ksqlUrl: string, config?: any): Promise<any> {
+
+export function getKsqlSchemas({
+  ksqlUrl,
+  subscription,
+}: Config): Promise<{ schemas: any; queryResolvers: any; subscriptionResolvers: any }> {
   return new Promise(resolve => {
-    (async function run() {
-      const output = await schemas(ksqlUrl, config);
-      resolve(output);
+    (async function run(): Promise<void> {
+      const result = await schemas(ksqlUrl);
+      if (result) {
+        const { queryResolvers, subscriptionResolvers } = generateResolvers(
+          result.fields,
+          subscription
+        );
+        resolve({ schemas: result.schema, queryResolvers, subscriptionResolvers });
+      } else {
+        throw new Error('Unable to create schemas and resolvers');
+      }
     })();
   });
 }
