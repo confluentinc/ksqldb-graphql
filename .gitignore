@@ -19,7 +19,7 @@ build
 .env.production.local
 
 # api key
-packages/rideshare/src/.mapKeyApi.js
+packages/rideshare/src/.mapApiKey.js
 
 npm-debug.log*
 yarn-debug.log*
