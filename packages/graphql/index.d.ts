@@ -1,4 +1,4 @@
-import { Config } from './src/schema';
+import { Config } from './src/type/definition';
 
 declare module '@ksql/graphql' {
   export const getKsqlSchemas: (

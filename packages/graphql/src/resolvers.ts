@@ -1,40 +1,65 @@
-type Resolver = any;
-type Name = { value: string; kind: 'Name'; loc: any };
+import { FieldNode, GraphQLResolveInfo } from 'graphql';
 
-export const handleResolve = (obj: any, args: any, context: any, info: any) => {
+import { KSqlEntities, Resolver, SubscriptionResolver } from './type/definition';
+
+export const handleResolve = (
+  obj: void,
+  args: { [key: string]: string },
+  context: void,
+  info: GraphQLResolveInfo
+): { command: string } | null => {
   // TODO what about multiple field nodes?
   const node = info.fieldNodes[0];
+  if (!node || !node.selectionSet) {
+    return null;
+  }
+  const command = [];
 
-  const fields = node.selectionSet.selections
-    .filter(({ name }: { name: Name }) => name.value !== 'command')
-    .map(({ name }: { name: Name }) => {
+  // Generate the select statement
+  const selections: Array<FieldNode> = node.selectionSet.selections as Array<FieldNode>;
+  const fields = selections
+    .filter(({ name }: FieldNode) => name.value !== 'command')
+    .map(({ name }: FieldNode) => {
       return name.value;
     });
-  const command = `select ${fields.join(', ')} from ${node.name.value};`;
+  command.push(`select ${fields.join(', ')} from ${node.name.value}`);
+
+  // Add where clause
+  const whereArguments = Object.keys(args);
+  if (whereArguments.length > 0) {
+    command.push(
+      `where ${whereArguments
+        .map(key => {
+          return `${key}=${args[key]}`;
+        })
+        .join(' and ')}`
+    );
+  }
+
   return {
-    command,
+    command: `${command.join(' ')};`,
   };
 };
 
-export const createResolver = (resolvers: any, key: string) => {
+export const createResolver = (resolvers: Resolver, key: string): Resolver => {
   resolvers[key] = handleResolve;
   return resolvers;
 };
 
-export function generateResolvers(fields: any, subscription: any): { [name: string]: Resolver } {
+export function generateResolvers(
+  fields: KSqlEntities,
+  subscription: any
+): { queryResolvers: Resolver; subscriptionResolvers: SubscriptionResolver } {
   const queries = Object.keys(fields);
 
   const queryResolvers = queries.reduce(createResolver, {});
 
-  const subscriptionResolvers = queries.reduce(
-    (resolvers: { [name: string]: { subscribe: any } }, key: string) => {
-      resolvers[key] = {
-        subscribe: () => subscription.asyncIterator(`@ksqldb/${key}`),
-      };
-      return resolvers;
-    },
-    {}
-  );
+  const subscriptionResolvers = queries.reduce((resolvers: SubscriptionResolver, key: string) => {
+    resolvers[key] = {
+      subscribe: (): Promise<void> => subscription.asyncIterator(`@ksqldb/${key}`),
+    };
+    return resolvers;
+  }, {});
 
   return { queryResolvers, subscriptionResolvers };
 }
