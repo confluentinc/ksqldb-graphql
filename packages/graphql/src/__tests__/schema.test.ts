@@ -1,6 +1,6 @@
 import { printSchema, GraphQLSchema } from 'graphql';
 
-import { generateSchemaFromKsql } from './schema';
+import { Field, generateSchemaFromKsql } from '../schema';
 
 const processingLogFields = [
   {
@@ -170,6 +170,7 @@ type KSQL_PROCESSING_LOG {
   LEVEL: String
   TIME: Int
   MESSAGE: MESSAGE
+  command: String
 }
 
 type MESSAGE {
@@ -192,9 +193,22 @@ type RECORDPROCESSINGERROR {
 
 describe('processing fields', () => {
   it('creates a type for the processing log', () => {
+    const fields: Array<Field> = processingLogFields as Array<Field>;
     const type = generateSchemaFromKsql({
       name: 'KSQL_PROCESSING_LOG',
-      fields: processingLogFields,
+      fields,
+      readQueries: [],
+      writeQueries: [],
+      type: 'STREAM',
+      key: '',
+      timestamp: '',
+      statistics: '',
+      errorStats: '',
+      extended: true,
+      format: 'JSON',
+      topic: 'ksql_processing_log',
+      partitions: 1,
+      replication: 1,
     });
     const schema = printSchema(new GraphQLSchema({ query: type }));
     expect(schema).toEqual(schemaResult);
