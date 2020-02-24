@@ -1,6 +1,6 @@
 import { GraphQLSchema, GraphQLResolveInfo, GraphQLString, GraphQLObjectType } from 'graphql';
 
-import { generateResolvers, handleResolve } from '../resolvers';
+import { generateResolvers, generateStatement } from '../resolvers';
 
 describe('resolvers', () => {
   it('takes graphql and maps a command', () => {
@@ -42,14 +42,13 @@ describe('resolvers', () => {
       },
       variableValues: {},
     } as GraphQLResolveInfo;
-    const resolvedValue = handleResolve(undefined, {}, undefined, info);
-    expect(resolvedValue).toEqual({ command: 'select viewtime from PAGEVIEWS_ORIGINAL;' });
+    const resolvedValue = generateStatement(info, {});
+    expect(resolvedValue).toEqual('select viewtime from PAGEVIEWS_ORIGINAL emit changes;');
   });
 
   it('creates resolvers for queries and subscriptions', () => {
-    const subscription = jest.fn();
     const fields = { one: { type: GraphQLString }, two: { type: GraphQLString } };
-    const { queryResolvers, subscriptionResolvers } = generateResolvers(fields, subscription);
+    const { queryResolvers, subscriptionResolvers } = generateResolvers(fields);
     expect(queryResolvers).toEqual({
       one: expect.any(Function),
       two: expect.any(Function),

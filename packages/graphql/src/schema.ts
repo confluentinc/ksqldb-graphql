@@ -1,7 +1,7 @@
 import {
   GraphQLSchema,
   GraphQLString,
-  GraphQLInt,
+  GraphQLFloat,
   GraphQLList,
   GraphQLObjectType,
   printSchema,
@@ -17,13 +17,13 @@ import { Config, Field, KsqlResponse, KSqlEntities } from './type/definition';
 const TypeMap = {
   STRING: GraphQLString,
   VARCHAR: GraphQLString,
-  BIGINT: GraphQLInt,
-  INTEGER: GraphQLInt,
+  BIGINT: GraphQLFloat,
+  INTEGER: GraphQLFloat,
   ARRAY: {
     STRING: new GraphQLList(GraphQLString),
     VARCHAR: new GraphQLList(GraphQLString),
-    BIGINT: new GraphQLList(GraphQLInt),
-    INTEGER: new GraphQLList(GraphQLInt),
+    BIGINT: new GraphQLList(GraphQLFloat),
+    INTEGER: new GraphQLList(GraphQLFloat),
   },
   STRUCT: {}, // MemberSchema exclude not excluding this?
 };
@@ -136,13 +136,13 @@ const schemas = async (
     return generateSchemaAndFields(streams);
   } catch (e) {
     // eslint-disable-next-line
-    console.error(`unable to connect to ksql`, ksqlUrl);
+    console.error(`unable to connect to ksql ${ksqlUrl}`, e.message);
   }
 };
 
 export function getKsqlSchemas({
+  // subscription,
   ksqlUrl,
-  subscription,
 }: Config): Promise<{ schemas: any; queryResolvers: any; subscriptionResolvers: any }> {
   return new Promise(resolve => {
     (async function run(): Promise<void> {
@@ -150,10 +150,7 @@ export function getKsqlSchemas({
       if (result) {
         // eslint-disable-next-line
         console.log(printSchema(result.schema));
-        const { queryResolvers, subscriptionResolvers } = generateResolvers(
-          result.fields,
-          subscription
-        );
+        const { queryResolvers, subscriptionResolvers } = generateResolvers(result.fields);
         resolve({ schemas: result.schema, queryResolvers, subscriptionResolvers });
       } else {
         throw new Error('Unable to create schemas and resolvers');

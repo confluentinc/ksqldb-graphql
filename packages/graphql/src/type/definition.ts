@@ -1,4 +1,9 @@
-import { GraphQLFieldResolver, GraphQLObjectType, GraphQLScalarType } from 'graphql';
+import {
+  GraphQLFieldResolver,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLResolveInfo,
+} from 'graphql';
 
 export interface KSqlEntities {
   [key: string]: {
@@ -44,5 +49,14 @@ export interface Resolver {
   [key: string]: GraphQLFieldResolver<void, void>;
 }
 export interface SubscriptionResolver {
-  [name: string]: { subscribe: () => Promise<void> };
+  [name: string]: {
+    subscribe: (
+      obj: void,
+      args: { [key: string]: string },
+      context: void,
+      info: GraphQLResolveInfo
+    ) => Promise<void>;
+  };
 }
+
+export type KsqlGraphResolver = GraphQLFieldResolver<void, void, { [argName: string]: string }>;

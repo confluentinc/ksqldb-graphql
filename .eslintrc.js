@@ -14,6 +14,11 @@ module.exports = {
     jest: true,
     node: true,
   },
+  settings: {
+    react: {
+      "version": "detect",
+    }
+  },
   extends: [
     'plugin:react/recommended',
     'standard',
