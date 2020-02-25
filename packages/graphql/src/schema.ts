@@ -18,12 +18,14 @@ const TypeMap = {
   STRING: GraphQLString,
   VARCHAR: GraphQLString,
   BIGINT: GraphQLFloat,
+  DOUBLE: GraphQLFloat,
   INTEGER: GraphQLFloat,
   ARRAY: {
     STRING: new GraphQLList(GraphQLString),
     VARCHAR: new GraphQLList(GraphQLString),
     BIGINT: new GraphQLList(GraphQLFloat),
     INTEGER: new GraphQLList(GraphQLFloat),
+    DOUBLE: new GraphQLList(GraphQLFloat),
   },
   STRUCT: {}, // MemberSchema exclude not excluding this?
 };
@@ -121,7 +123,7 @@ const schemas = async (
     const response = await axios.post(
       endpoint,
       {
-        ksql: 'show streams extended;',
+        ksql: 'show tables extended;',
       },
       { timeout: 1000 }
     );

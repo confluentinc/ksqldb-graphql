@@ -3,7 +3,7 @@ import { ApolloProvider } from '@apollo/react-hooks';
 
 import GoogleApiWrapper from './GoogleApiWrapper';
 import RideshareMap from './RideshareMap';
-import client from './apolloClient';
+import { client } from './apolloClient';
 
 const Rideshare = GoogleApiWrapper(RideshareMap);
 const App: React.FC = () => {

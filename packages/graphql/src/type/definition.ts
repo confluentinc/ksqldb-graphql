@@ -13,7 +13,6 @@ export interface KSqlEntities {
 
 export interface Config {
   ksqlUrl: string;
-  subscription: any;
 }
 type KsqlType = 'BIGINT' | 'STRING' | 'INTEGER' | 'ARRAY' | 'VARCHAR' | 'STRUCT';
 export interface MemberSchema {

@@ -49,7 +49,8 @@ export const generateStatement = (
   const selections: Array<FieldNode> = node.selectionSet.selections as Array<FieldNode>;
   const fields = selections
     // For debugging commands - remove eventually
-    .filter(({ name }: FieldNode) => name.value !== 'command')
+    // __typename - TODO remove internal graphql stuff
+    .filter(({ name }: FieldNode) => name.value !== 'command' && name.value !== '__typename')
     .map(({ name }: FieldNode) => {
       return name.value;
     });
