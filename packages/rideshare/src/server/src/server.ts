@@ -1,17 +1,30 @@
 import { ApolloServer } from 'apollo-server';
 import { getKsqlSchemas } from '@ksql/graphql';
 import { addResolveFunctionsToSchema } from 'graphql-tools';
+import axios from 'axios';
 
 import { ksqlServer } from './index';
 
-getKsqlSchemas({ ksqlUrl: ksqlServer }).then(
-  ({ schemas, queryResolvers, subscriptionResolvers }) => {
+const instance = axios.create({
+  baseURL: ksqlServer,
+  timeout: 1000,
+});
+
+getKsqlSchemas({ requester: instance }).then(
+  ({ schemas, queryResolvers, subscriptionResolvers, mutationResolvers }) => {
     const apolloResolvers = {
       Subscription: subscriptionResolvers,
       Query: queryResolvers,
+      Mutation: mutationResolvers,
     };
     const schema = addResolveFunctionsToSchema({ schema: schemas, resolvers: apolloResolvers });
     const server = new ApolloServer({
+      context: async () => {
+        return {
+          // TODO make this generic enough that anything can be used
+          requester: instance,
+        };
+      },
       schema,
       tracing: true,
     });

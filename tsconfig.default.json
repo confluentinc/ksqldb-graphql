@@ -1,15 +1,19 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es6",              
+    "target": "es6",
     "moduleResolution": "node",
     "experimentalDecorators": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "baseUrl": "./packages/",
     "paths": {
-      "@ksqldb/*": ["*/src"]
+      "@ksqldb/*": [
+        "*/src"
+      ]
     }
   },
-  "exclude": ["./**/node_modules"]
+  "exclude": [
+    "./**/node_modules"
+  ]
 }

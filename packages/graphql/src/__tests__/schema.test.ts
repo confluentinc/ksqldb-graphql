@@ -170,11 +170,20 @@ type KSQL_PROCESSING_LOG {
   command: String
 }
 
+type KsqlMutation {
+  command: String
+  status: Int
+}
+
 type MESSAGE {
   TYPE: Float
   DESERIALIZATIONERROR: DESERIALIZATIONERROR
   RECORDPROCESSINGERROR: RECORDPROCESSINGERROR
   PRODUCTIONERROR: PRODUCTIONERROR
+}
+
+type Mutation {
+  KSQL_PROCESSING_LOG(ROWTIME: Float, ROWKEY: String, LOGGER: String, LEVEL: String, TIME: Float, command: String): KsqlMutation
 }
 
 type PRODUCTIONERROR {

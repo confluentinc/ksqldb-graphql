@@ -11,8 +11,9 @@ export interface KSqlEntities {
   };
 }
 
+export type Request = (url: string, body: any, args: any) => void;
 export interface Config {
-  ksqlUrl: string;
+  requester: any;
 }
 type KsqlType = 'BIGINT' | 'STRING' | 'INTEGER' | 'ARRAY' | 'VARCHAR' | 'STRUCT';
 export interface MemberSchema {
@@ -45,17 +46,21 @@ export interface KsqlResponse {
   replication: number;
 }
 export interface Resolver {
-  [key: string]: GraphQLFieldResolver<void, void>;
+  [key: string]: GraphQLFieldResolver<void, { requester: any }>;
 }
 export interface SubscriptionResolver {
   [name: string]: {
     subscribe: (
       obj: void,
       args: { [key: string]: string },
-      context: void,
+      context: { requester: any },
       info: GraphQLResolveInfo
     ) => Promise<void>;
   };
 }
 
-export type KsqlGraphResolver = GraphQLFieldResolver<void, void, { [argName: string]: string }>;
+export type KsqlGraphResolver = GraphQLFieldResolver<
+  void,
+  { requester: any },
+  { [argName: string]: string }
+>;

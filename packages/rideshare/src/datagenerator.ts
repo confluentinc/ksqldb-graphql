@@ -39,8 +39,13 @@ async function generateData(id: string, route: number): Promise<void> {
       { timeout: 1000 }
     );
   } catch (e) {
-    // eslint-disable-next-line
-    console.error(e.response.data.message);
+    if (e.response?.data?.message) {
+      // eslint-disable-next-line
+      console.error(e.response?.data?.message);
+    } else {
+      // eslint-disable-next-line
+      console.error(e.response);
+    }
   }
 
   const response = await axios.post(
