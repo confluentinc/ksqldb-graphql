@@ -41,7 +41,11 @@ function getFields(selections: Array<FieldNode>): Array<string> {
     // __typename - TODO remove internal graphql stuff
     .filter(({ name }: FieldNode) => name.value !== 'command' && name.value !== '__typename')
     .map(({ name }: FieldNode) => {
+<<<<<<< HEAD
       return escape(name.value);
+=======
+      return name.value;
+>>>>>>> feat: add mutations to graphql
     });
   return fields;
 }
