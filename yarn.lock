@@ -1743,12 +1743,12 @@
   resolved "https://registry.yarnpkg.com/@thi.ng/binary/-/binary-1.2.1.tgz#2eb83d1c138f7fee46590f3d7bb86ca1a634fbf9"
   integrity sha512-G6/sFcTTvy26WOrAjLwj0ZUZpmRF3XfPFw0g0Vd6wiPaWmobvYqro3e5hQu3KjqFID4tLTp1nEsG8ZbsRZJvhA==
 
-"@thi.ng/bitstream@1.1.6":
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/@thi.ng/bitstream/-/bitstream-1.1.6.tgz#31d8e17530747d97a0dfda11f058943ffa267710"
-  integrity sha512-n2c7vPa1m8rtVFllrOR9+Md6AZOrZfSirnc8L57xWCrWXkjda75G4Lw2dem0EKe983xA/2v3xWiALlARboVq/g==
+"@thi.ng/bitstream@1.1.9":
+  version "1.1.9"
+  resolved "https://registry.yarnpkg.com/@thi.ng/bitstream/-/bitstream-1.1.9.tgz#0c54fde9b798eb98b58b8b23e2b0f6c6b986108d"
+  integrity sha512-Tyk8GdiFpeXxbMh3H05ihYZeVPtS9/j55b3nRYJqyrKvj9jbXP1R9/GxVirYjkpAIeoE7yATMKN5BuI22S+QPA==
   dependencies:
-    "@thi.ng/errors" "^1.2.3"
+    "@thi.ng/errors" "^1.2.6"
 
 "@thi.ng/checks@^2.5.0":
   version "2.5.0"
@@ -1790,6 +1790,11 @@
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/@thi.ng/errors/-/errors-1.2.3.tgz#644cc7efba09dc218a42f5a7a8460f64ad89dc8d"
   integrity sha512-s/PTvprqTbZyLIPDS0jbgRCObsgHgXpbxvoe/64FZq3WuX/KrOMN0qqxnJY61Yy/rCsrLRubJfIChxx4SFnjFg==
+
+"@thi.ng/errors@^1.2.6":
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/@thi.ng/errors/-/errors-1.2.6.tgz#e526ea4c7023260bd15369af6b50ec4e908e6fb0"
+  integrity sha512-9mCEWPENahkaRnjcqmKcJVdRmwfVr8JotBA10iijWwKtvrMJAM9vNcCHB99h/WJLJc0tLt4fEYeOmKJcoYhKsg==
 
 "@thi.ng/math@^1.6.0":
   version "1.6.0"
