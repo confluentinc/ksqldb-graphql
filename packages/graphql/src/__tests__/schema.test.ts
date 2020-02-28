@@ -1,6 +1,7 @@
-import { printSchema, GraphQLSchema } from 'graphql';
+import { printSchema } from 'graphql';
 
-import { Field, generateSchemaFromKsql } from '../schema';
+import { Field } from '../type/definition';
+import { generateSchemaAndFields } from '../schema';
 
 const processingLogFields = [
   {
@@ -153,35 +154,44 @@ const processingLogFields = [
   },
 ];
 
-const schemaResult = `schema {
-  query: KSQL_PROCESSING_LOG
-}
-
-type DESERIALIZATIONERROR {
+const schemaResult = `type DESERIALIZATIONERROR {
   ERRORMESSAGE: String
   RECORDB64: String
   CAUSE: [String]
 }
 
 type KSQL_PROCESSING_LOG {
-  ROWTIME: Int
+  ROWTIME: Float
   ROWKEY: String
   LOGGER: String
   LEVEL: String
-  TIME: Int
+  TIME: Float
   MESSAGE: MESSAGE
   command: String
 }
 
+type KsqlMutation {
+  command: String
+  status: Int
+}
+
 type MESSAGE {
-  TYPE: Int
+  TYPE: Float
   DESERIALIZATIONERROR: DESERIALIZATIONERROR
   RECORDPROCESSINGERROR: RECORDPROCESSINGERROR
   PRODUCTIONERROR: PRODUCTIONERROR
 }
 
+type Mutation {
+  KSQL_PROCESSING_LOG(ROWTIME: Float, ROWKEY: String, LOGGER: String, LEVEL: String, TIME: Float, command: String): KsqlMutation
+}
+
 type PRODUCTIONERROR {
   ERRORMESSAGE: String
+}
+
+type Query {
+  KSQL_PROCESSING_LOG(ROWTIME: Float, ROWKEY: String, LOGGER: String, LEVEL: String, TIME: Float, command: String): KSQL_PROCESSING_LOG
 }
 
 type RECORDPROCESSINGERROR {
@@ -189,28 +199,35 @@ type RECORDPROCESSINGERROR {
   RECORD: String
   CAUSE: [String]
 }
+
+type Subscription {
+  KSQL_PROCESSING_LOG(ROWTIME: Float, ROWKEY: String, LOGGER: String, LEVEL: String, TIME: Float, command: String): KSQL_PROCESSING_LOG
+}
 `;
 
 describe('processing fields', () => {
   it('creates a type for the processing log', () => {
     const fields: Array<Field> = processingLogFields as Array<Field>;
-    const type = generateSchemaFromKsql({
-      name: 'KSQL_PROCESSING_LOG',
-      fields,
-      readQueries: [],
-      writeQueries: [],
-      type: 'STREAM',
-      key: '',
-      timestamp: '',
-      statistics: '',
-      errorStats: '',
-      extended: true,
-      format: 'JSON',
-      topic: 'ksql_processing_log',
-      partitions: 1,
-      replication: 1,
-    });
-    const schema = printSchema(new GraphQLSchema({ query: type }));
-    expect(schema).toEqual(schemaResult);
+    const { schema, fields: rawFields } = generateSchemaAndFields([
+      {
+        name: 'KSQL_PROCESSING_LOG',
+        fields,
+        readQueries: [],
+        writeQueries: [],
+        type: 'STREAM',
+        key: '',
+        timestamp: '',
+        statistics: '',
+        errorStats: '',
+        extended: true,
+        format: 'JSON',
+        topic: 'ksql_processing_log',
+        partitions: 1,
+        replication: 1,
+      },
+    ]);
+    const testSchema = printSchema(schema);
+    expect(testSchema).toEqual(schemaResult);
+    expect(rawFields).not.toBe(undefined);
   });
 });

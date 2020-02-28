@@ -17,7 +17,8 @@
   "scripts": {
     "lint": "eslint . --report-unused-disable-directives --ext .tsx,.js",
     "client": "react-scripts start",
-    "server": "yarn nodemon -w server/* src/server/src/index.ts"
+    "server": "yarn nodemon -w server/* src/server/src/server.ts",
+    "datagen": "yarn ts-node src/datagenerator.ts"
   },
   "dependencies": {
     "react-scripts": "3.4.0"
