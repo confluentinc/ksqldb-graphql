@@ -3,7 +3,12 @@ import { connect, ClientHttp2Session } from 'http2';
 import { FieldNode, GraphQLResolveInfo } from 'graphql';
 import { asyncIteratorQueryStream } from '@ksqldb/client';
 
-import { KSqlEntities, Resolver, SubscriptionResolver, KsqlGraphResolver } from './type/definition';
+import {
+  KSqlDBEntities,
+  Resolver,
+  SubscriptionResolver,
+  KsqlDBGraphResolver,
+} from './type/definition';
 
 const createSession = (): ClientHttp2Session | void => {
   try {
@@ -41,11 +46,7 @@ function getFields(selections: Array<FieldNode>): Array<string> {
     // __typename - TODO remove internal graphql stuff
     .filter(({ name }: FieldNode) => name.value !== 'command' && name.value !== '__typename')
     .map(({ name }: FieldNode) => {
-<<<<<<< HEAD
       return escape(name.value);
-=======
-      return name.value;
->>>>>>> feat: add mutations to graphql
     });
   return fields;
 }
@@ -83,7 +84,7 @@ export const generateStatement = (
 /*
  *  a generic form of these does not really exist (eg taking the latest of every field)
  */
-export const handleQueryResolve: KsqlGraphResolver = async (
+export const handleQueryResolve: KsqlDBGraphResolver = async (
   obj,
   args,
   context,
@@ -103,7 +104,7 @@ export const handleQueryResolve: KsqlGraphResolver = async (
   };
 };
 
-export const createResolver = (resolver: KsqlGraphResolver) => (
+export const createResolver = (resolver: KsqlDBGraphResolver) => (
   resolvers: Resolver,
   key: string
 ): Resolver => {
@@ -111,12 +112,7 @@ export const createResolver = (resolver: KsqlGraphResolver) => (
   return resolvers;
 };
 
-const handleSubscriptionResolve: KsqlGraphResolver = async (
-  obj,
-  args,
-  context,
-  info
-): Promise<any> => {
+const handleSubscriptionResolve: KsqlDBGraphResolver = async (obj, args, context, info) => {
   const sql = generateStatement(info, args);
 
   if (!sql) {
@@ -147,7 +143,7 @@ export function createInsertStatement(
   return command;
 }
 
-const handleMutationResolve: KsqlGraphResolver = async (obj, args, context, info): Promise<any> => {
+const handleMutationResolve: KsqlDBGraphResolver = async (obj, args, context, info) => {
   const { requester } = context;
   const command = createInsertStatement(info, args);
   try {
@@ -159,7 +155,7 @@ const handleMutationResolve: KsqlGraphResolver = async (obj, args, context, info
 };
 
 export function generateResolvers(
-  fields: KSqlEntities
+  fields: KSqlDBEntities
 ): {
   queryResolvers: Resolver;
   subscriptionResolvers: SubscriptionResolver;

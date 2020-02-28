@@ -5,7 +5,7 @@ import {
   GraphQLResolveInfo,
 } from 'graphql';
 
-export interface KSqlEntities {
+export interface KSqlDBEntities {
   [key: string]: {
     type: GraphQLObjectType | GraphQLScalarType;
   };
@@ -15,21 +15,21 @@ export type Request = (url: string, body: any, args: any) => void;
 export interface Config {
   requester: any;
 }
-type KsqlType = 'BIGINT' | 'STRING' | 'INTEGER' | 'ARRAY' | 'VARCHAR' | 'STRUCT';
+type KsqldbType = 'BIGINT' | 'STRING' | 'INTEGER' | 'ARRAY' | 'VARCHAR' | 'STRUCT';
 export interface MemberSchema {
-  type: Exclude<'ARRAY' | 'STRUCT', KsqlType>; // TODO - can you have arrays in member schemas?
+  type: Exclude<'ARRAY' | 'STRUCT', KsqldbType>; // TODO - can you have arrays in member schemas?
 }
 
 export interface Field {
   name: string;
   schema: {
-    type: KsqlType;
+    type: KsqldbType;
     fields: Array<Field> | null;
     memberSchema: MemberSchema | null;
   };
 }
 
-export interface KsqlResponse {
+export interface KsqlDBResponse {
   name: string;
   readQueries: Array<any>; // TODO
   writeQueries: Array<any>; // TOOD
@@ -59,7 +59,7 @@ export interface SubscriptionResolver {
   };
 }
 
-export type KsqlGraphResolver = GraphQLFieldResolver<
+export type KsqlDBGraphResolver = GraphQLFieldResolver<
   void,
   { requester: any },
   { [argName: string]: string }

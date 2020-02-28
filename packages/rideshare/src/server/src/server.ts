@@ -1,5 +1,5 @@
 import { ApolloServer } from 'apollo-server';
-import { getKsqlSchemas } from '@ksql/graphql';
+import { buildKsqlDBGraphQL } from '@ksqldb/graphql';
 import { addResolveFunctionsToSchema } from 'graphql-tools';
 import axios from 'axios';
 
@@ -10,7 +10,7 @@ const instance = axios.create({
   timeout: 1000,
 });
 
-getKsqlSchemas({ requester: instance }).then(
+buildKsqlDBGraphQL({ requester: instance }).then(
   ({ schemas, queryResolvers, subscriptionResolvers, mutationResolvers }) => {
     const apolloResolvers = {
       Subscription: subscriptionResolvers,
@@ -26,11 +26,14 @@ getKsqlSchemas({ requester: instance }).then(
         };
       },
       schema,
+      subscriptions: {
+        keepAlive: 1000,
+      },
       tracing: true,
     });
     const options = { port: 4000, host: 'localhost' };
-    const host = process.env.HOST;
-    const port = process.env.PORT;
+    const host = process.env.API_HOST;
+    const port = process.env.API_PORT;
     if (host != null) {
       options.host = host;
     }

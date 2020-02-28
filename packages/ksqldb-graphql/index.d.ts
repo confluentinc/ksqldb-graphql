@@ -1,7 +1,7 @@
 import { Config } from './src/type/definition';
 
-declare module '@ksql/graphql' {
-  export const getKsqlSchemas: (
+declare module '@ksqldb/graphql' {
+  export const buildKsqlDBGraphQL: (
     params: Config,
     config?: any
   ) => Promise<{

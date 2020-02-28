@@ -15,9 +15,10 @@ const wsLink = new WebSocketLink({
   uri: `ws://${host}:${port}/graphql`,
   options: {
     reconnect: true,
+    lazy: true,
+    timeout: 60000,
   },
 });
-
 const link = split(
   // split based on operation type
   ({ query }) => {

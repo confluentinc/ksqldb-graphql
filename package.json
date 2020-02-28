@@ -1,5 +1,5 @@
 {
-  "name": "ksqldb-graphql",
+  "name": "ksqldb",
   "version": "0.0.0",
   "private": true,
   "workspaces": [
@@ -29,7 +29,8 @@
   "scripts": {
     "lint": "eslint . --report-unused-disable-directives --ext .tsx,.js",
     "in": "yarn install --frozen-lockfile --prefer-offline",
-    "test": "yarn workspace @ksql/graphql test"
+    "test": "yarn workspace @ksqldb/graphql test",
+    "rideshare": "yarn workspace @ksqldb/rideshare start"
   },
   "eslintConfig": {
     "extends": "react-app"

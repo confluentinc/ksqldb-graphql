@@ -1,26 +1,30 @@
 {
-  "name": "@ksqldb-graphql/rideshare",
+  "name": "@ksqldb/rideshare",
   "version": "0.0.0",
   "description": "rideshare example",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/confluentinc/ksqldb-graphql.git"
   },
-  "homepage": "https://github.com/confluentinc/ksqldb-graphql/blob/master/packages/rideshare",
   "license": "UNLICENSED",
-  "main": "client/src/index.js",
-  "module": "client/src/index.js",
+  "main": "src/index.tsx",
+  "module": "src/index.tsx",
   "files": [
     "client/src",
     "server/src"
   ],
   "scripts": {
     "lint": "eslint . --report-unused-disable-directives --ext .tsx,.js",
-    "client": "react-scripts start",
-    "server": "yarn nodemon -w server/* src/server/src/server.ts",
-    "datagen": "yarn ts-node src/datagenerator.ts"
+    "dev-client": "react-scripts build",
+    "client": "rm -rf build && react-scripts build && yarn serve -s build -l 3002",
+    "dev-server": "yarn nodemon -w server/* src/server/src/server.ts",
+    "datagen": "yarn ts-node --project ../../tsconfig.json src/server/src/datagenerator.ts",
+    "server": "yarn ts-node --project ../../tsconfig.json src/server/src/server.ts",
+    "start": "yarn ts-node --project ../../tsconfig.json src/runner.ts"
   },
   "dependencies": {
-    "react-scripts": "3.4.0"
+    "react-scripts": "3.4.0",
+    "serve": "11.3.0"
   }
 }
