@@ -24,7 +24,7 @@
     "styled-components": "5.0.1",
     "subscriptions-transport-ws": "0.9.16",
     "ts-node": "8.6.2",
-    "typescript": "3.8.2"
+    "typescript": "3.8.3"
   },
   "scripts": {
     "lint": "eslint . --report-unused-disable-directives --ext .tsx,.js",
