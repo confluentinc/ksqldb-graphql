@@ -3,6 +3,13 @@ import { printSchema } from 'graphql';
 import { Field } from '../type/definition';
 import { generateSchemaAndFields } from '../schema';
 
+jest.mock('http2', () => {
+  return {
+    connect: (): any => ({
+      on: jest.fn(),
+    }),
+  };
+});
 const processingLogFields = [
   {
     name: 'ROWTIME',
@@ -207,6 +214,8 @@ type Subscription {
 
 describe('processing fields', () => {
   it('creates a type for the processing log', () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore
     const fields: Array<Field> = processingLogFields as Array<Field>;
     const { schema, fields: rawFields } = generateSchemaAndFields([
       {

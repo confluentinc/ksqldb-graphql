@@ -1,11 +1,11 @@
 const prettier = {
-  "bracketSpacing": true,
-  "jsxBracketSameLine": false,
-  "printWidth": 100,
-  "semi": true,
-  "singleQuote": true,
-  "tabWidth": 2,
-  "trailingComma": "es5"
+  bracketSpacing: true,
+  jsxBracketSameLine: false,
+  printWidth: 100,
+  semi: true,
+  singleQuote: true,
+  tabWidth: 2,
+  trailingComma: 'es5',
 };
 module.exports = {
   env: {
@@ -16,35 +16,30 @@ module.exports = {
   },
   settings: {
     react: {
-      "version": "detect",
-    }
+      version: 'detect',
+    },
   },
   extends: [
     'plugin:react/recommended',
     'standard',
     'prettier',
     'prettier/react',
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended"
+    'plugin:@typescript-eslint/eslint-recommended',
+    'plugin:@typescript-eslint/recommended',
   ],
   globals: {
     Atomics: 'readonly',
-    SharedArrayBuffer: 'readonly'
+    SharedArrayBuffer: 'readonly',
   },
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaFeatures: {
-      jsx: true
+      jsx: true,
     },
     ecmaVersion: 2018,
-    sourceType: 'module'
+    sourceType: 'module',
   },
-  plugins: [
-    'react',
-    '@typescript-eslint',
-    'react-hooks',
-    'prettier',
-  ],
+  plugins: ['react', '@typescript-eslint', 'react-hooks', 'prettier'],
   rules: {
     'prettier/prettier': [2, prettier],
     camelcase: [2, { properties: 'never' }],
@@ -73,6 +68,7 @@ module.exports = {
     'import/first': 2,
     'import/no-duplicates': 2,
     'import/no-namespace': 0,
+    '@typescript-eslint/no-explicit-any': 0,
     'import/extensions': [
       2,
       {
@@ -176,5 +172,5 @@ module.exports = {
     'valid-jsdoc': 2,
     'valid-typeof': 2,
     yoda: 2,
-  }
-}
+  },
+};
