@@ -8,10 +8,10 @@
     "test": "TS_NODE_PROJECT=test/tsconfig.json mocha"
   },
   "devDependencies": {
-    "@types/mocha": "5.2.7",
+    "@types/mocha": "7.0.1",
     "@types/node": "12.12.29",
     "@types/ws": "6.0.4",
-    "mocha": "6.2.2",
+    "mocha": "7.1.0",
     "ts-node": "8.6.2",
     "typescript": "3.8.3"
   },
