@@ -10,7 +10,7 @@ Because of ksqldb [klip-15](https://github.com/confluentinc/ksql/pull/4069), the
 # Integration
 For statements to be executed against ksqdb, a `requester` must be provided, both at startup and in the context of the graphql resolvers. It is assumed that it has a signature the same to that of [axios](https://github.com/axios/axios).
 
-The prebuild step, `buildKsqldbGraphQL`, returns a promise and should be called prior to starting the graphql server.
+The prebuild step, `buildKsqlDBGraphQL`, returns a promise and should be called prior to starting the graphql server.
 
 # Usage
 
