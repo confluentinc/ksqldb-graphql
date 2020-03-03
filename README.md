@@ -16,7 +16,7 @@ The prebuild step, `buildKsqldbGraphQL`, returns a promise and should be called 
 
 ```js
 import { ApolloServer } from 'apollo-server';
-import { buildKsqldbGraphQL } from '@ksqldb/graphql';
+import { buildKsqlDBGraphQL } from '@ksqldb/graphql';
 import { addResolveFunctionsToSchema } from 'graphql-tools';
 import axios from 'axios';
 
@@ -25,7 +25,7 @@ const instance = axios.create({
   timeout: 1000,
 });
 
-buildKsqldbGraphQL({ requester: instance }).then(
+buildKsqlDBGraphQL({ requester: instance }).then(
   ({ schemas, queryResolvers, subscriptionResolvers, mutationResolvers }) => {
     const apolloResolvers = {
       Subscription: subscriptionResolvers,
@@ -40,6 +40,9 @@ buildKsqldbGraphQL({ requester: instance }).then(
         };
       },
       schema,
+      subscriptions: {
+        keepAlive: 1000,
+      },
     });
     server.listen();
   }
