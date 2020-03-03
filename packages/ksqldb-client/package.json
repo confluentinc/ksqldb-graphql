@@ -2,7 +2,7 @@
   "name": "@ksqldb/client",
   "version": "0.0.0",
   "private": true,
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "build": "tsc --declaration",
     "test": "TS_NODE_PROJECT=test/tsconfig.json mocha"

@@ -1,20 +1,20 @@
 {
-  "name": "@ksql/graphql",
+  "name": "@ksqldb/graphql",
   "version": "0.0.0",
-  "description": "graphql utilities for ksql",
+  "description": "graphql utilities for ksqldb",
   "repository": {
     "type": "git",
     "url": "https://github.com/confluentinc/ksqldb-graphql.git"
   },
   "homepage": "https://github.com/confluentinc/ksqldb-graphql/blob/master/packages/graphql",
   "license": "UNLICENSED",
-  "main": "src/index.js",
-  "module": "src/index.js",
+  "main": "index.ts",
+  "module": "index.ts",
   "files": [
     "src"
   ],
   "scripts": {
-    "lint": "eslint . --report-unused-disable-directives --ext .tsx,.js",
+    "lint": "eslint . --report-unused-disable-directives --ext .tsx,.ts",
     "test": "react-scripts test"
   },
   "dependencies": {

@@ -1,8 +1,8 @@
-import querystring from 'querystring';
+import { stringify, parse } from 'querystring';
 
 import axios from 'axios';
 
-import { ksqlServer } from './server/src/index';
+import { ksqlServer } from './index';
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -32,7 +32,7 @@ const createStatement = `create table cars (id VARCHAR, lat DOUBLE, long DOUBLE)
 async function generateData(id: string, route: number): Promise<void> {
   try {
     await axios.post(
-      `${ksqlServer}/ksql`,
+      `${ksqlServer}ksql`,
       {
         ksql: createStatement,
       },
@@ -44,15 +44,15 @@ async function generateData(id: string, route: number): Promise<void> {
       console.error(e.response?.data?.message);
     } else {
       // eslint-disable-next-line
-      console.error(e.response);
+      console.error(e);
     }
   }
 
   const response = await axios.post(
     'https://www.gmap-pedometer.com/gp/ajaxRoute/get',
-    querystring.stringify({ rId: route })
+    stringify({ rId: route })
   );
-  const data: Payload = querystring.parse(response.data) as Payload;
+  const data: Payload = parse(response.data) as Payload;
   const lines = data.polyline.split('a');
   for (let i = 0; i < lines.length; i++) {
     // const payload = { id, lat: parseFloat(lines[i]), long: parseFloat(lines[i + 1]) };
@@ -60,7 +60,7 @@ async function generateData(id: string, route: number): Promise<void> {
       lines[i]
     )}, ${parseFloat(lines[i + 1])});`;
     await axios.post(
-      `${ksqlServer}/ksql`,
+      `${ksqlServer}ksql`,
       {
         ksql: command,
       },
@@ -73,8 +73,9 @@ async function generateData(id: string, route: number): Promise<void> {
   }
 }
 
-generateData('car1', 7428722);
-generateData('car2', 7429821);
-generateData('car3', 7429825);
-generateData('car4', 7430753);
-// ksql commands to run
+export default async function generate(): Promise<void> {
+  generateData('car1', 7428722);
+  generateData('car2', 7429821);
+  generateData('car3', 7429825);
+  generateData('car4', 7430753);
+}

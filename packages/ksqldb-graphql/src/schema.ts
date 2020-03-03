@@ -12,7 +12,7 @@ import {
 } from 'graphql';
 
 import { generateResolvers } from './resolvers';
-import { Config, Field, KsqlResponse, KSqlEntities } from './type/definition';
+import { Config, Field, KsqlDBResponse, KSqlDBEntities } from './type/definition';
 
 const TypeMap = {
   STRING: GraphQLString,
@@ -30,7 +30,7 @@ const TypeMap = {
   STRUCT: {}, // MemberSchema exclude not excluding this?
 };
 
-const setSchemaType = (accum: KSqlEntities, field: Field): void => {
+const setSchemaType = (accum: KSqlDBEntities, field: Field): void => {
   if (TypeMap[field.schema.type] == null) {
     // eslint-disable-next-line
     console.error(`type ${field.schema.type} is not supported`);
@@ -52,7 +52,7 @@ const setSchemaType = (accum: KSqlEntities, field: Field): void => {
   }
 };
 
-const buildSchemaObject = (accum: KSqlEntities, field: Field): KSqlEntities => {
+const buildSchemaObject = (accum: KSqlDBEntities, field: Field): KSqlDBEntities => {
   if (field.schema.fields == null) {
     setSchemaType(accum, field);
   } else if (Array.isArray(field.schema.fields)) {
@@ -70,7 +70,7 @@ const buildSchemaObject = (accum: KSqlEntities, field: Field): KSqlEntities => {
 export const generateSchemaFromKsql = ({
   name,
   fields,
-}: KsqlResponse): GraphQLObjectTypeConfig<void, void> => {
+}: KsqlDBResponse): GraphQLObjectTypeConfig<void, void> => {
   const schemaFields = fields.reduce(buildSchemaObject, {});
   return {
     name,
@@ -94,8 +94,8 @@ const generateGraqphQLArgs = (fields: any): any =>
   }, {});
 
 export const generateSchemaAndFields = (
-  streams: Array<KsqlResponse>
-): { schema: GraphQLSchema; fields: KSqlEntities } => {
+  streams: Array<KsqlDBResponse>
+): { schema: GraphQLSchema; fields: KSqlDBEntities } => {
   const schemas: GraphQLObjectTypeConfig<void, void>[] = [];
   for (const stream of streams) {
     schemas.push(generateSchemaFromKsql(stream));
@@ -142,7 +142,7 @@ export const generateSchemaAndFields = (
 
 const schemas = async (
   requester: any
-): Promise<{ schema: GraphQLSchema; fields: KSqlEntities } | undefined> => {
+): Promise<{ schema: GraphQLSchema; fields: KSqlDBEntities } | undefined> => {
   try {
     const response = await requester.post(
       'ksql',
@@ -162,7 +162,7 @@ const schemas = async (
       throw new Error('No ksql tables created.');
     }
 
-    const streams: Array<KsqlResponse> = response.data[0].sourceDescriptions;
+    const streams: Array<KsqlDBResponse> = response.data[0].sourceDescriptions;
 
     return generateSchemaAndFields(streams);
   } catch (e) {
@@ -171,7 +171,7 @@ const schemas = async (
   }
 };
 
-export function getKsqlSchemas({
+export function buildKsqlDBGraphQL({
   requester,
 }: Config): Promise<{
   schemas: any;
@@ -181,21 +181,25 @@ export function getKsqlSchemas({
 }> {
   return new Promise(resolve => {
     (async function run(): Promise<void> {
-      const result = await schemas(requester);
-      if (result) {
-        // eslint-disable-next-line
-        console.log(printSchema(result.schema));
-        const { queryResolvers, subscriptionResolvers, mutationResolvers } = generateResolvers(
-          result.fields
-        );
-        resolve({
-          schemas: result.schema,
-          queryResolvers,
-          subscriptionResolvers,
-          mutationResolvers,
-        });
-      } else {
-        throw new Error('Unable to create schemas and resolvers');
+      try {
+        const result = await schemas(requester);
+        if (result) {
+          // eslint-disable-next-line
+          console.log(printSchema(result.schema));
+          const { queryResolvers, subscriptionResolvers, mutationResolvers } = generateResolvers(
+            result.fields
+          );
+          resolve({
+            schemas: result.schema,
+            queryResolvers,
+            subscriptionResolvers,
+            mutationResolvers,
+          });
+        } else {
+          throw new Error('Unable to create schemas and resolvers');
+        }
+      } catch (e) {
+        // console.log(e);
       }
     })();
   });
