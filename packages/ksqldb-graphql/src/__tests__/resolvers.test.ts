@@ -2,6 +2,14 @@ import { GraphQLSchema, GraphQLResolveInfo, GraphQLString, GraphQLObjectType } f
 
 import { generateResolvers, generateStatement, createInsertStatement } from '../resolvers';
 
+jest.mock('http2', () => {
+  return {
+    connect: (): any => ({
+      on: jest.fn(),
+    }),
+  };
+});
+
 const testGraphQL = () => {
   const objType = new GraphQLObjectType({
     name: 'PAGEVIEWS_ORIGINAL',
@@ -15,6 +23,8 @@ const testGraphQL = () => {
       { kind: 'FragmentSpread', name: { value: ';Drop TABLES;viewtime', kind: 'Name' } },
     ],
   };
+  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+  // @ts-ignore
   const info: GraphQLResolveInfo = {
     fieldName: 'spongebob',
     fieldNodes: [
