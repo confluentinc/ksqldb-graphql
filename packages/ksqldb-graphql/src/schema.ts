@@ -9,9 +9,10 @@ import {
   GraphQLScalarType,
   GraphQLObjectTypeConfig,
   GraphQLInt,
+  GraphQLFieldConfigMap,
 } from 'graphql';
 
-import { generateResolvers } from './resolvers';
+import { ResolverGenerator } from './resolvers';
 import { Config, Field, KsqlDBResponse, KSqlDBEntities } from './type/definition';
 
 const TypeMap = {
@@ -95,7 +96,7 @@ const generateGraqphQLArgs = (fields: any): any =>
 
 export const generateSchemaAndFields = (
   streams: Array<KsqlDBResponse>
-): { schema: GraphQLSchema; fields: KSqlDBEntities } => {
+): { schema: GraphQLSchema; fields: GraphQLFieldConfigMap<any, any, any> } => {
   const schemas: GraphQLObjectTypeConfig<void, void>[] = [];
   for (const stream of streams) {
     schemas.push(generateSchemaFromKsql(stream));
@@ -142,7 +143,7 @@ export const generateSchemaAndFields = (
 
 const schemas = async (
   requester: any
-): Promise<{ schema: GraphQLSchema; fields: KSqlDBEntities } | undefined> => {
+): Promise<{ schema: GraphQLSchema; fields: GraphQLFieldConfigMap<any, any, any> } | undefined> => {
   try {
     const response = await requester.post(
       'ksql',
@@ -158,16 +159,15 @@ const schemas = async (
       return;
     }
 
-    if (response.data.length === 0) {
-      throw new Error('No ksql tables created.');
-    }
-
     const streams: Array<KsqlDBResponse> = response.data[0].sourceDescriptions;
 
+    if (streams.length === 0) {
+      throw new Error(`No ksql tables exist on ksql server ${requester.defaults.baseURL}`);
+    }
     return generateSchemaAndFields(streams);
   } catch (e) {
     // eslint-disable-next-line
-    console.error(`unable to connect to ksql`, e.message);
+    console.error(`Could not generate schemas:`, e.message);
   }
 };
 
@@ -186,9 +186,11 @@ export function buildKsqlDBGraphQL({
         if (result) {
           // eslint-disable-next-line
           console.log(printSchema(result.schema));
-          const { queryResolvers, subscriptionResolvers, mutationResolvers } = generateResolvers(
-            result.fields
-          );
+          const {
+            queryResolvers,
+            subscriptionResolvers,
+            mutationResolvers,
+          } = new ResolverGenerator(result.fields);
           resolve({
             schemas: result.schema,
             queryResolvers,
@@ -198,8 +200,8 @@ export function buildKsqlDBGraphQL({
         } else {
           throw new Error('Unable to create schemas and resolvers');
         }
-      } catch (e) {
-        // console.log(e);
+      } catch {
+        // noop
       }
     })();
   });
