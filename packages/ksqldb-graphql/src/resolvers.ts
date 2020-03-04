@@ -167,7 +167,7 @@ export class ResolverGenerator {
           .join(' and ')}`
       );
     }
-    return `${command.join(' ')} emit changes;`;
+    return `${command.join(' ')}`;
   };
 
   /*
@@ -183,11 +183,13 @@ export class ResolverGenerator {
     context,
     info
   ): Promise<{ command: string } | null> => {
-    const sql = this.generateStatement(info, args)?.replace(' emit changes', '');
+    const sql = `${this.generateStatement(info, args)};`;
     const { requester } = context;
     // TODO handle the values that come back from this request
-    await requester.post('ksql', { sql });
-
+    const response = await requester.post('ksql', { sql });
+    if (response.data.length === 0) {
+      throw new Error(`No response from ksql: ${sql}`);
+    }
     if (!sql) {
       return null;
     }
@@ -198,7 +200,7 @@ export class ResolverGenerator {
   };
 
   handleSubscriptionResolve: KsqlDBGraphResolver = async (obj, args, context, info) => {
-    const sql = this.generateStatement(info, args);
+    const sql = `${this.generateStatement(info, args)} emit changes;`;
 
     if (!sql) {
       return Promise.resolve(new Error('Unable to generate ksqlDB from graphql statement.'));

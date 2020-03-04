@@ -29,10 +29,18 @@ export interface Field {
   };
 }
 
+type KsqlDBQuery = {
+  queryString: string;
+  sinks: Array<string>;
+  sinkKafkaTopics: Array<string>;
+  id: string;
+  state: 'RUNNING';
+} | null;
+
 export interface KsqlDBResponse {
   name: string;
-  readQueries: Array<any>; // TODO
-  writeQueries: Array<any>; // TOOD
+  readQueries: Array<KsqlDBQuery>;
+  writeQueries: Array<KsqlDBQuery>;
   fields: Array<Field>;
   type: 'STREAM' | 'TABLE';
   key: string;

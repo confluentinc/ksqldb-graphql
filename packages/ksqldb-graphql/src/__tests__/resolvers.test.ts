@@ -63,9 +63,7 @@ describe('resolvers', () => {
     const info = testGraphQL();
     const resolver = new ResolverGenerator(fields);
     const resolvedValue = resolver.generateStatement(info, {});
-    expect(resolvedValue).toEqual(
-      'select %3BDrop%20TABLES%3Bviewtime from PAGEVIEWS_ORIGINAL emit changes;'
-    );
+    expect(resolvedValue).toEqual('select %3BDrop%20TABLES%3Bviewtime from PAGEVIEWS_ORIGINAL');
   });
 
   it('filters out fields that ksql does not know about', () => {
@@ -79,7 +77,7 @@ describe('resolvers', () => {
     const info = testGraphQL();
     const resolver = new ResolverGenerator(fields);
     const resolvedValue = resolver.generateStatement(info, {});
-    expect(resolvedValue).toEqual(`select command from PAGEVIEWS_ORIGINAL emit changes;`);
+    expect(resolvedValue).toEqual(`select command from PAGEVIEWS_ORIGINAL`);
   });
 
   it('throws an error if all fields have been filtered out', () => {

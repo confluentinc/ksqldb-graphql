@@ -94,6 +94,37 @@ const generateGraqphQLArgs = (fields: any): any =>
     return accum;
   }, {});
 
+function generateQueries(streams: Array<KsqlDBResponse>, subscriptionFields: any) {
+  return (accum: { [name: string]: any }, query: any): any => {
+    const schemaType = new GraphQLObjectType(query);
+    const ksqlDBQuery = streams.find(stream => stream.name === query.name);
+    // if a ksqlDB query is writing something, it's materialized, so it qualifies as a query
+    if (ksqlDBQuery != null && ksqlDBQuery.writeQueries.length > 0) {
+      const args = generateGraqphQLArgs(query.fields);
+      if (subscriptionFields[query.name] != null) {
+        accum[query.name] = subscriptionFields[query.name];
+      } else {
+        accum[query.name] = {
+          type: schemaType,
+          args,
+        };
+      }
+    }
+    return accum;
+  };
+}
+
+// anything can be a subscription
+function generateSubscription(accum: { [name: string]: any }, query: any): any {
+  const schemaType = new GraphQLObjectType(query);
+  const args = generateGraqphQLArgs(query.fields);
+  accum[query.name] = {
+    type: schemaType,
+    args,
+  };
+  return accum;
+}
+
 export const generateSchemaAndFields = (
   streams: Array<KsqlDBResponse>
 ): { schema: GraphQLSchema; fields: GraphQLFieldConfigMap<any, any, any> } => {
@@ -102,42 +133,38 @@ export const generateSchemaAndFields = (
     schemas.push(generateSchemaFromKsql(stream));
   }
 
-  const queryFields = schemas.reduce((accum: { [name: string]: any }, query: any) => {
-    const schemaType = new GraphQLObjectType(query);
-    const args = generateGraqphQLArgs(query.fields);
-    accum[query.name] = {
-      type: schemaType,
-      args,
-    };
-    return accum;
-  }, {});
+  const subscriptionFields = schemas.reduce(generateSubscription, {});
+  const queryFields = schemas.reduce(generateQueries(streams, subscriptionFields), {});
+  const KsqlDBMutation = new GraphQLObjectType({
+    name: `KsqlDBMutation`,
+    fields: {
+      command: {
+        type: GraphQLString,
+      },
+      status: {
+        type: GraphQLInt,
+      },
+    },
+  });
   const mutationFields = schemas.reduce((accum: { [name: string]: any }, query: any) => {
     const args = generateGraqphQLArgs(query.fields);
     accum[query.name] = {
-      type: new GraphQLObjectType({
-        name: 'KsqlMutation',
-        fields: {
-          command: {
-            type: GraphQLString,
-          },
-          status: {
-            type: GraphQLInt,
-          },
-        },
-      }),
+      type: KsqlDBMutation,
       args,
     };
     return accum;
   }, {});
   const queryType = new GraphQLObjectType({ name: 'Query', fields: queryFields });
-  const subscriptionType = new GraphQLObjectType({ name: 'Subscription', fields: queryFields });
+  const subscriptionType = new GraphQLObjectType({
+    name: 'Subscription',
+    fields: subscriptionFields,
+  });
   const mutationType = new GraphQLObjectType({ name: 'Mutation', fields: mutationFields });
   const gqlSchema = new GraphQLSchema({
     query: queryType,
     subscription: subscriptionType,
     mutation: mutationType,
   });
-
   return { schema: gqlSchema, fields: queryFields };
 };
 
@@ -148,7 +175,7 @@ const schemas = async (
     const response = await requester.post(
       'ksql',
       {
-        ksql: 'show tables extended;',
+        ksql: 'show streams extended; show tables extended;',
       },
       { timeout: 1000 }
     );
@@ -158,13 +185,14 @@ const schemas = async (
       console.error(`request to ksql failed`, response);
       return;
     }
-
     const streams: Array<KsqlDBResponse> = response.data[0].sourceDescriptions;
+    const tables: Array<KsqlDBResponse> = response.data[1].sourceDescriptions;
 
     if (streams.length === 0) {
       throw new Error(`No ksql tables exist on ksql server ${requester.defaults.baseURL}`);
     }
-    return generateSchemaAndFields(streams);
+
+    return generateSchemaAndFields(streams.concat(tables));
   } catch (e) {
     // eslint-disable-next-line
     console.error(`Could not generate schemas:`, e.message);
