@@ -1,9 +1,14 @@
 import { connect, ClientHttp2Session } from 'http2';
 
-import { FieldNode, GraphQLResolveInfo, GraphQLFieldConfigMap } from 'graphql';
+import { FieldNode, GraphQLResolveInfo } from 'graphql';
 import { asyncIteratorQueryStream } from '@ksqldb/client';
 
-import { Resolver, SubscriptionResolver, KsqlDBGraphResolver } from './type/definition';
+import {
+  Resolver,
+  SubscriptionResolver,
+  ResolverFields,
+  KsqlDBGraphResolver,
+} from './type/definition';
 
 /*
  * Creates an http2 session
@@ -84,7 +89,7 @@ export class ResolverGenerator {
    * A list of fields available in ksqlDB
    * Used to filter out an internal graphql stuff that could affect query generation
    */
-  whitelistFields: string[] = [];
+  whitelistFields = new Set();
 
   /*
    * A map of resolvers for the `Query` in graphql
@@ -108,29 +113,48 @@ export class ResolverGenerator {
    */
   subscriptionResolvers = {};
 
-  constructor(protected fields: GraphQLFieldConfigMap<any, any, any>) {
-    const queries = Object.keys(fields);
-    this.whitelistFields = queries.reduce((accum: string[], key) => {
-      const { args } = fields[key];
+  constructor(protected fields: ResolverFields) {
+    const { queryFields, subscriptionFields, mutationFields } = fields;
+    const queries: Array<string> = Object.keys(queryFields);
+    const mutations: Array<string> = Object.keys(mutationFields);
+    const subscriptions: Array<string> = Object.keys(subscriptionFields);
+    queries.concat(subscriptions, mutations).reduce((accum: Set<string>, key: any) => {
+      let args;
+      if (queryFields[key]) {
+        args = queryFields[key].args;
+      } else if (subscriptionFields[key]) {
+        args = subscriptionFields[key].args;
+      } else if (mutationFields[key]) {
+        args = mutationFields[key].args;
+      }
+
       if (args) {
-        return accum.concat(Object.keys(args));
+        Object.keys(args).forEach((key) => {
+          accum.add(key)
+        })
       }
       return accum;
-    }, []);
+    }, this.whitelistFields);
     this.queryResolvers = queries.reduce(createResolver(this.handleQueryResolve), {});
-    this.mutationResolvers = queries.reduce(createResolver(this.handleMutationResolve), {});
-    this.subscriptionResolvers = queries.reduce((resolvers: SubscriptionResolver, key: string) => {
-      resolvers[key] = {
-        subscribe: this.handleSubscriptionResolve,
-      };
-      return resolvers;
-    }, {});
+    this.mutationResolvers = mutations.reduce(createResolver(this.handleMutationResolve), {});
+    this.subscriptionResolvers = subscriptions.reduce(
+      (resolvers: SubscriptionResolver, key: string) => {
+        resolvers[key] = {
+          subscribe: this.handleSubscriptionResolve,
+        };
+        return resolvers;
+      },
+      {}
+    );
   }
 
+  /*
+   * Filter out any internal graphQL items that could break KSQL statement generation
+   */
   getFields(selections: Array<FieldNode>): Array<string> {
     const fields = selections
       // __typename is part of these selections. enforce only using ksql fields as a response
-      .filter(({ name }: FieldNode) => this.whitelistFields.includes(name.value))
+      .filter(({ name }: FieldNode) => this.whitelistFields.has(name.value))
       .map(({ name }: FieldNode) => {
         return escape(name.value);
       });
@@ -140,6 +164,9 @@ export class ResolverGenerator {
     return fields;
   }
 
+  /*
+   *Creates a generic kaql statement based for graphql.
+   */
   generateStatement = (
     info: GraphQLResolveInfo,
     args: { [key: string]: string }
@@ -149,9 +176,9 @@ export class ResolverGenerator {
     if (!node || !node.selectionSet) {
       return null;
     }
-
     const command = [];
     const selections: Array<FieldNode> = node.selectionSet.selections as Array<FieldNode>;
+
     const fields = this.getFields(selections);
     const name = getNameFromResolveInfo(info);
     command.push(`select ${fields.join(', ')} from ${name}`);
@@ -175,30 +202,39 @@ export class ResolverGenerator {
    * There are a bunch of extra parameters that need to be decorated into the schema
    * https://docs.ksqldb.io/en/latest/concepts/queries/pull/#pull-query-features-and-limitations
    * a generic form of these does not really exist (eg taking the latest of every field) - https://github.com/confluentinc/ksql/issues/3985
-   * a valid query would be `select LAT, LONG from CARS where ROWKEY='Car1';`, but https://github.com/confluentinc/ksql/issues/4698
    */
-  handleQueryResolve: KsqlDBGraphResolver = async (
-    obj,
-    args,
-    context,
-    info
-  ): Promise<{ command: string } | null> => {
+  handleQueryResolve: KsqlDBGraphResolver = async (obj, args, context, info): Promise<any> => {
     const sql = `${this.generateStatement(info, args)};`;
-    const { requester } = context;
-    // TODO handle the values that come back from this request
-    const response = await requester.post('ksql', { sql });
-    if (response.data.length === 0) {
-      throw new Error(`No response from ksql: ${sql}`);
-    }
     if (!sql) {
       return null;
     }
-
-    return {
-      command: sql,
-    };
+    const stream = asyncIteratorQueryStream(session, { sql }, 'query');
+    for await (const row of stream) {
+      // both of these are possible, seems like a bug in @ksqldb/client
+      // { query: { COUNT: { value: [Array], done: true } } }
+      // { query: { COUNT: 1 } }
+      const { query } = row;
+      return Object.keys(query).reduce((accum: any, qry) => {
+        if (query[qry].done) {
+          const { value } = query[qry];
+          try {
+            const parsedVal = JSON.parse(value[0]);
+            accum[qry] = parsedVal[0]; // maybe?
+          } catch (e) {
+            // eslint-disable-next-line
+            console.error(e);
+          }
+        } else {
+          accum[qry] = query[qry];
+        }
+        return accum;
+      }, {});
+    }
   };
 
+  /*
+   * Modifies the generic ksql statement and converts it into a push query
+   */
   handleSubscriptionResolve: KsqlDBGraphResolver = async (obj, args, context, info) => {
     const sql = `${this.generateStatement(info, args)} emit changes;`;
 
@@ -210,6 +246,9 @@ export class ResolverGenerator {
     return stream;
   };
 
+  /*
+   * Creates insert statements to add new messages
+   */
   handleMutationResolve: KsqlDBGraphResolver = async (obj, args, context, info) => {
     const { requester } = context;
     const command = createInsertStatement(info, args);

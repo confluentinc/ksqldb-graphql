@@ -1,6 +1,7 @@
 import { GraphQLSchema, GraphQLResolveInfo, GraphQLString, GraphQLObjectType } from 'graphql';
 
 import { ResolverGenerator, createInsertStatement } from '../resolvers';
+import { ResolverFields } from '../type/definition';
 
 jest.mock('http2', () => {
   return {
@@ -54,14 +55,23 @@ const testGraphQL = () => {
   return info;
 };
 
+function resolverPayload(fields): ResolverFields {
+  return {
+    queryFields: fields,
+    mutationFields: fields,
+    subscriptionFields: fields,
+  };
+}
+
 describe('resolvers', () => {
   it('takes graphql and maps a command', () => {
     const fields = {
       one: { type: GraphQLString, args: { ';Drop TABLES;viewtime': { type: GraphQLString } } },
       two: { type: GraphQLString },
     };
+
     const info = testGraphQL();
-    const resolver = new ResolverGenerator(fields);
+    const resolver = new ResolverGenerator(resolverPayload(fields));
     const resolvedValue = resolver.generateStatement(info, {});
     expect(resolvedValue).toEqual('select %3BDrop%20TABLES%3Bviewtime from PAGEVIEWS_ORIGINAL');
   });
@@ -75,14 +85,14 @@ describe('resolvers', () => {
       two: { type: GraphQLString },
     };
     const info = testGraphQL();
-    const resolver = new ResolverGenerator(fields);
+    const resolver = new ResolverGenerator(resolverPayload(fields));
     const resolvedValue = resolver.generateStatement(info, {});
     expect(resolvedValue).toEqual(`select command from PAGEVIEWS_ORIGINAL`);
   });
 
   it('throws an error if all fields have been filtered out', () => {
     const info = testGraphQL();
-    const resolver = new ResolverGenerator({});
+    const resolver = new ResolverGenerator(resolverPayload({}));
     expect(() => resolver.generateStatement(info, {})).toThrowError();
   });
 
@@ -98,7 +108,11 @@ describe('resolvers', () => {
   });
   it('creates resolvers for queries and subscriptions', () => {
     const fields = { one: { type: GraphQLString }, two: { type: GraphQLString } };
-    const resolver = new ResolverGenerator(fields);
+    const resolver = new ResolverGenerator({
+      queryFields: { one: fields.one },
+      mutationFields: fields,
+      subscriptionFields: { two: fields.two },
+    });
     const { mutationResolvers, queryResolvers, subscriptionResolvers } = resolver;
     expect(mutationResolvers).toEqual({
       one: expect.any(Function),
@@ -106,10 +120,8 @@ describe('resolvers', () => {
     });
     expect(queryResolvers).toEqual({
       one: expect.any(Function),
-      two: expect.any(Function),
     });
     expect(subscriptionResolvers).toEqual({
-      one: { subscribe: expect.any(Function) },
       two: { subscribe: expect.any(Function) },
     });
   });

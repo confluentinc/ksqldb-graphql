@@ -178,7 +178,6 @@ type KSQL_PROCESSING_LOG {
   LEVEL: String
   TIME: Float
   MESSAGE: MESSAGE
-  command: String
 }
 
 type KsqlDBMutation {
@@ -194,14 +193,22 @@ type MESSAGE {
 }
 
 type Mutation {
-  KSQL_PROCESSING_LOG(ROWTIME: Float, ROWKEY: String, LOGGER: String, LEVEL: String, TIME: Float, command: String): KsqlDBMutation
+  KSQL_PROCESSING_LOG(ROWTIME: Float, ROWKEY: String, LOGGER: String, LEVEL: String, TIME: Float): KsqlDBMutation
 }
+
+"""
+No materalized views have been registered. Register materialized views in order
+to use pull queries. Refer to https://cnfl.io/queries for info on query types.
+"""
+scalar NoPullQueries
 
 type PRODUCTIONERROR {
   ERRORMESSAGE: String
 }
 
-type Query
+type Query {
+  KsqlDBGraphQLError: NoPullQueries
+}
 
 type RECORDPROCESSINGERROR {
   ERRORMESSAGE: String
@@ -210,6 +217,6 @@ type RECORDPROCESSINGERROR {
 }
 
 type Subscription {
-  KSQL_PROCESSING_LOG(ROWTIME: Float, ROWKEY: String, LOGGER: String, LEVEL: String, TIME: Float, command: String): KSQL_PROCESSING_LOG
+  KSQL_PROCESSING_LOG(ROWTIME: Float, ROWKEY: String, LOGGER: String, LEVEL: String, TIME: Float): KSQL_PROCESSING_LOG
 }
 `;

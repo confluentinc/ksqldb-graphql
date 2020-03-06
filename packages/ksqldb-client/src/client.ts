@@ -119,11 +119,11 @@ export class AsyncIteratorQueryStream<T> extends QueryStream<T> {
         } else {
           const [error] = received;
           try {
-            const parsedError = JSON.parse(error);
-            if (parsedError.status === 'error') {
+            const parsedError = error && JSON.parse(error);
+            if (parsedError?.status === 'error') {
               reject(new Error(parsedError.message));
             } else {
-              resolve({ value: received, done: true });
+              return resolve({ value: received, done: true });
             }
           } catch (e) {
             reject(new Error(e.message));
@@ -172,19 +172,26 @@ export class AsyncIteratorQueryStream<T> extends QueryStream<T> {
       new Promise((resolve, reject) => promised.push([resolve, reject]));
 
     // the first promise parses query response metadata and returns col names.
-    const getRowKeys: Promise<string[]> = nextPromise().then((rawMeta: string) => {
-      try {
-        const meta = JSON.parse(rawMeta);
-        if (meta.status === 'error') {
-          const err = meta as Error;
-          destroyStream(err);
-          throw err;
+    const getRowKeys: Promise<string[]> = nextPromise().then(
+      (rawMeta: string | { value: Array<string>; done: boolean }) => {
+        try {
+          let meta: any = {};
+          if (typeof rawMeta !== 'string' && rawMeta.value) {
+            meta = JSON.parse(rawMeta.value[0]);
+          } else if (typeof rawMeta === 'string') {
+            meta = JSON.parse(rawMeta);
+          }
+          if (meta.status === 'error') {
+            const err = meta as Error;
+            destroyStream(err);
+            throw err;
+          }
+          return meta.columnNames;
+        } catch (e) {
+          destroyStream(new Error(e.message));
         }
-        return meta.columnNames;
-      } catch (e) {
-        destroyStream(new Error(e.message));
       }
-    });
+    );
 
     doWork();
 

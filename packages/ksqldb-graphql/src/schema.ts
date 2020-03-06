@@ -8,12 +8,11 @@ import {
   isInputType,
   GraphQLScalarType,
   GraphQLObjectTypeConfig,
-  GraphQLInt,
-  GraphQLFieldConfigMap,
 } from 'graphql';
 
 import { ResolverGenerator } from './resolvers';
-import { Config, Field, KsqlDBResponse, KSqlDBEntities } from './type/definition';
+import { Config, Field, KsqlDBResponse, KSqlDBEntities, ResolverFields } from './type/definition';
+import { Missing, KsqlDBMutation } from './graphQLObjectTypes';
 
 const TypeMap = {
   STRING: GraphQLString,
@@ -75,13 +74,7 @@ export const generateSchemaFromKsql = ({
   const schemaFields = fields.reduce(buildSchemaObject, {});
   return {
     name,
-    fields: {
-      ...schemaFields,
-      // for debugging
-      command: {
-        type: GraphQLString,
-      },
-    },
+    fields: schemaFields,
   };
 };
 
@@ -125,52 +118,72 @@ function generateSubscription(accum: { [name: string]: any }, query: any): any {
   return accum;
 }
 
+function generateMutations(accum: { [name: string]: any }, query: any): any {
+  const args = generateGraqphQLArgs(query.fields);
+  accum[query.name] = {
+    type: KsqlDBMutation,
+    args,
+  };
+  return accum;
+}
 export const generateSchemaAndFields = (
   streams: Array<KsqlDBResponse>
-): { schema: GraphQLSchema; fields: GraphQLFieldConfigMap<any, any, any> } => {
+): {
+  schema: GraphQLSchema;
+  fields: ResolverFields;
+} => {
   const schemas: GraphQLObjectTypeConfig<void, void>[] = [];
   for (const stream of streams) {
     schemas.push(generateSchemaFromKsql(stream));
   }
 
   const subscriptionFields = schemas.reduce(generateSubscription, {});
-  const queryFields = schemas.reduce(generateQueries(streams, subscriptionFields), {});
-  const KsqlDBMutation = new GraphQLObjectType({
-    name: `KsqlDBMutation`,
+  const mutationFields = schemas.reduce(generateMutations, {});
+
+  let queryFields = schemas.reduce(generateQueries(streams, subscriptionFields), {});
+  // if you have no materialized views, graphql won't work, so default to subscriptions, already logged out this won't work
+  // why default? http://spec.graphql.org/June2018/#sec-Schema
+  if (Object.keys(queryFields).length === 0) {
+    // eslint-disable-next-line
+    console.error(
+      'No materalized views have been registered.',
+      'Only subscriptions and mutations will be work properly.',
+      'Defaulting `type Query` to null scalar since it is required by graphQL.'
+    );
+    queryFields = { KsqlDBGraphQLError: Missing };
+  }
+
+  return {
+    schema: new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: queryFields,
+      }),
+      subscription: new GraphQLObjectType({
+        name: 'Subscription',
+        fields: subscriptionFields,
+      }),
+
+      mutation: new GraphQLObjectType({ name: 'Mutation', fields: mutationFields }),
+    }),
     fields: {
-      command: {
-        type: GraphQLString,
-      },
-      status: {
-        type: GraphQLInt,
-      },
+      queryFields: Object.keys(queryFields)
+        .filter(key => {
+          return queryFields[key] !== Missing;
+        })
+        .reduce((accum: any, key: string) => {
+          accum[key] = queryFields[key];
+          return accum;
+        }, {}),
+      subscriptionFields,
+      mutationFields,
     },
-  });
-  const mutationFields = schemas.reduce((accum: { [name: string]: any }, query: any) => {
-    const args = generateGraqphQLArgs(query.fields);
-    accum[query.name] = {
-      type: KsqlDBMutation,
-      args,
-    };
-    return accum;
-  }, {});
-  const queryType = new GraphQLObjectType({ name: 'Query', fields: queryFields });
-  const subscriptionType = new GraphQLObjectType({
-    name: 'Subscription',
-    fields: subscriptionFields,
-  });
-  const mutationType = new GraphQLObjectType({ name: 'Mutation', fields: mutationFields });
-  const gqlSchema = new GraphQLSchema({
-    query: queryType,
-    subscription: subscriptionType,
-    mutation: mutationType,
-  });
-  return { schema: gqlSchema, fields: queryFields };
+  };
 };
 
 const schemas = async (
   requester: any
-): Promise<{ schema: GraphQLSchema; fields: GraphQLFieldConfigMap<any, any, any> } | undefined> => {
+): Promise<{ schema: GraphQLSchema; fields: ResolverFields } | undefined> => {
   try {
     const response = await requester.post(
       'ksql',
@@ -228,7 +241,8 @@ export function buildKsqlDBGraphQL({
         } else {
           throw new Error('Unable to create schemas and resolvers');
         }
-      } catch {
+      } catch (e) {
+        throw new Error(e);
         // noop
       }
     })();

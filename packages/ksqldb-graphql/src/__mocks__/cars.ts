@@ -75,14 +75,12 @@ export const carSchemaResult = `type CARS {
   ID: String
   LAT: Float
   LONG: Float
-  command: String
 }
 
 type CARS_COUNT {
   ROWTIME: Float
   ROWKEY: String
   COUNT: Float
-  command: String
 }
 
 type KsqlDBMutation {
@@ -91,16 +89,16 @@ type KsqlDBMutation {
 }
 
 type Mutation {
-  CARS(ROWTIME: Float, ROWKEY: String, ID: String, LAT: Float, LONG: Float, command: String): KsqlDBMutation
-  CARS_COUNT(ROWTIME: Float, ROWKEY: String, COUNT: Float, command: String): KsqlDBMutation
+  CARS(ROWTIME: Float, ROWKEY: String, ID: String, LAT: Float, LONG: Float): KsqlDBMutation
+  CARS_COUNT(ROWTIME: Float, ROWKEY: String, COUNT: Float): KsqlDBMutation
 }
 
 type Query {
-  CARS_COUNT(ROWTIME: Float, ROWKEY: String, COUNT: Float, command: String): CARS_COUNT
+  CARS_COUNT(ROWTIME: Float, ROWKEY: String, COUNT: Float): CARS_COUNT
 }
 
 type Subscription {
-  CARS(ROWTIME: Float, ROWKEY: String, ID: String, LAT: Float, LONG: Float, command: String): CARS
-  CARS_COUNT(ROWTIME: Float, ROWKEY: String, COUNT: Float, command: String): CARS_COUNT
+  CARS(ROWTIME: Float, ROWKEY: String, ID: String, LAT: Float, LONG: Float): CARS
+  CARS_COUNT(ROWTIME: Float, ROWKEY: String, COUNT: Float): CARS_COUNT
 }
 `;

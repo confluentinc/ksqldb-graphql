@@ -3,6 +3,7 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLResolveInfo,
+  GraphQLFieldConfigMap,
 } from 'graphql';
 
 export interface KSqlDBEntities {
@@ -72,3 +73,9 @@ export type KsqlDBGraphResolver = GraphQLFieldResolver<
   { requester: any },
   { [argName: string]: string }
 >;
+
+export type ResolverFields = {
+  queryFields: GraphQLFieldConfigMap<any, any, any>;
+  subscriptionFields: GraphQLFieldConfigMap<any, any, any>;
+  mutationFields: GraphQLFieldConfigMap<any, any, any>;
+};
