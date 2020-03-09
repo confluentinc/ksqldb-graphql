@@ -16,7 +16,7 @@
     "typescript": "3.8.3"
   },
   "dependencies": {
-    "ws": "7.2.1",
+    "ws": "7.2.3",
     "@thi.ng/bitstream": "1.1.10",
     "@thi.ng/rstream": "3.0.7",
     "@thi.ng/transducers": "6.4.1"
