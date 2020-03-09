@@ -18,7 +18,7 @@
     "lint": "eslint . --report-unused-disable-directives --ext .tsx,.js",
     "dev-client": "react-scripts build",
     "client": "rm -rf build && react-scripts build && yarn serve -s build -l 3002",
-    "dev-server": "yarn nodemon -w server/* src/server/src/server.ts",
+    "dev-server": "yarn nodemon --skip-project -w server/* src/server/src/server.ts",
     "datagen": "yarn ts-node --project ../../tsconfig.json src/server/src/datagenerator.ts",
     "server": "yarn ts-node --project ../../tsconfig.json src/server/src/server.ts",
     "start": "yarn ts-node --project ../../tsconfig.json src/runner.ts"

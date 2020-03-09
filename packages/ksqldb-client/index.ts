@@ -1,1 +1,2 @@
-export { asyncIteratorQueryStream } from './src/client';
+export { asyncIteratorQueryStream } from './src/queryStream';
+export { ddl } from './src/ddl';
