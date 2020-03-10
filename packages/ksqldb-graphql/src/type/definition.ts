@@ -3,6 +3,7 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLResolveInfo,
+  GraphQLFieldConfigMap,
 } from 'graphql';
 
 export interface KSqlDBEntities {
@@ -29,10 +30,18 @@ export interface Field {
   };
 }
 
+type KsqlDBQuery = {
+  queryString: string;
+  sinks: Array<string>;
+  sinkKafkaTopics: Array<string>;
+  id: string;
+  state: 'RUNNING';
+} | null;
+
 export interface KsqlDBResponse {
   name: string;
-  readQueries: Array<any>; // TODO
-  writeQueries: Array<any>; // TOOD
+  readQueries: Array<KsqlDBQuery>;
+  writeQueries: Array<KsqlDBQuery>;
   fields: Array<Field>;
   type: 'STREAM' | 'TABLE';
   key: string;
@@ -64,3 +73,9 @@ export type KsqlDBGraphResolver = GraphQLFieldResolver<
   { requester: any },
   { [argName: string]: string }
 >;
+
+export type ResolverFields = {
+  queryFields: GraphQLFieldConfigMap<any, any, any>;
+  subscriptionFields: GraphQLFieldConfigMap<any, any, any>;
+  mutationFields: GraphQLFieldConfigMap<any, any, any>;
+};

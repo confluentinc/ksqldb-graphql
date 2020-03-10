@@ -8,11 +8,11 @@ import {
   isInputType,
   GraphQLScalarType,
   GraphQLObjectTypeConfig,
-  GraphQLInt,
 } from 'graphql';
 
-import { generateResolvers } from './resolvers';
-import { Config, Field, KsqlDBResponse, KSqlDBEntities } from './type/definition';
+import { ResolverGenerator } from './resolvers';
+import { Config, Field, KsqlDBResponse, KSqlDBEntities, ResolverFields } from './type/definition';
+import { Missing, KsqlDBMutation } from './graphQLObjectTypes';
 
 const TypeMap = {
   STRING: GraphQLString,
@@ -74,13 +74,7 @@ export const generateSchemaFromKsql = ({
   const schemaFields = fields.reduce(buildSchemaObject, {});
   return {
     name,
-    fields: {
-      ...schemaFields,
-      // for debugging
-      command: {
-        type: GraphQLString,
-      },
-    },
+    fields: schemaFields,
   };
 };
 
@@ -93,61 +87,108 @@ const generateGraqphQLArgs = (fields: any): any =>
     return accum;
   }, {});
 
+function generateQueries(streams: Array<KsqlDBResponse>, subscriptionFields: any) {
+  return (accum: { [name: string]: any }, query: any): any => {
+    const schemaType = new GraphQLObjectType(query);
+    const ksqlDBQuery = streams.find(stream => stream.name === query.name);
+    // if a ksqlDB query is writing something, it's materialized, so it qualifies as a query
+    if (ksqlDBQuery != null && ksqlDBQuery.writeQueries.length > 0) {
+      const args = generateGraqphQLArgs(query.fields);
+      if (subscriptionFields[query.name] != null) {
+        accum[query.name] = subscriptionFields[query.name];
+      } else {
+        accum[query.name] = {
+          type: schemaType,
+          args,
+        };
+      }
+    }
+    return accum;
+  };
+}
+
+// anything can be a subscription
+function generateSubscription(accum: { [name: string]: any }, query: any): any {
+  const schemaType = new GraphQLObjectType(query);
+  const args = generateGraqphQLArgs(query.fields);
+  accum[query.name] = {
+    type: schemaType,
+    args,
+  };
+  return accum;
+}
+
+function generateMutations(accum: { [name: string]: any }, query: any): any {
+  const args = generateGraqphQLArgs(query.fields);
+  accum[query.name] = {
+    type: KsqlDBMutation,
+    args,
+  };
+  return accum;
+}
 export const generateSchemaAndFields = (
   streams: Array<KsqlDBResponse>
-): { schema: GraphQLSchema; fields: KSqlDBEntities } => {
+): {
+  schema: GraphQLSchema;
+  fields: ResolverFields;
+} => {
   const schemas: GraphQLObjectTypeConfig<void, void>[] = [];
   for (const stream of streams) {
     schemas.push(generateSchemaFromKsql(stream));
   }
 
-  const queryFields = schemas.reduce((accum: { [name: string]: any }, query: any) => {
-    const schemaType = new GraphQLObjectType(query);
-    const args = generateGraqphQLArgs(query.fields);
-    accum[query.name] = {
-      type: schemaType,
-      args,
-    };
-    return accum;
-  }, {});
-  const mutationFields = schemas.reduce((accum: { [name: string]: any }, query: any) => {
-    const args = generateGraqphQLArgs(query.fields);
-    accum[query.name] = {
-      type: new GraphQLObjectType({
-        name: 'KsqlMutation',
-        fields: {
-          command: {
-            type: GraphQLString,
-          },
-          status: {
-            type: GraphQLInt,
-          },
-        },
-      }),
-      args,
-    };
-    return accum;
-  }, {});
-  const queryType = new GraphQLObjectType({ name: 'Query', fields: queryFields });
-  const subscriptionType = new GraphQLObjectType({ name: 'Subscription', fields: queryFields });
-  const mutationType = new GraphQLObjectType({ name: 'Mutation', fields: mutationFields });
-  const gqlSchema = new GraphQLSchema({
-    query: queryType,
-    subscription: subscriptionType,
-    mutation: mutationType,
-  });
+  const subscriptionFields = schemas.reduce(generateSubscription, {});
+  const mutationFields = schemas.reduce(generateMutations, {});
 
-  return { schema: gqlSchema, fields: queryFields };
+  let queryFields = schemas.reduce(generateQueries(streams, subscriptionFields), {});
+  // if you have no materialized views, graphql won't work, so default to subscriptions, already logged out this won't work
+  // why default? http://spec.graphql.org/June2018/#sec-Schema
+  if (Object.keys(queryFields).length === 0) {
+    // eslint-disable-next-line
+    console.error(
+      'No materalized views have been registered.',
+      'Only subscriptions and mutations will be work properly.',
+      'Defaulting `type Query` to null scalar since it is required by graphQL.'
+    );
+    queryFields = { KsqlDBGraphQLError: Missing };
+  }
+
+  return {
+    schema: new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: queryFields,
+      }),
+      subscription: new GraphQLObjectType({
+        name: 'Subscription',
+        fields: subscriptionFields,
+      }),
+
+      mutation: new GraphQLObjectType({ name: 'Mutation', fields: mutationFields }),
+    }),
+    fields: {
+      queryFields: Object.keys(queryFields)
+        .filter(key => {
+          return queryFields[key] !== Missing;
+        })
+        .reduce((accum: any, key: string) => {
+          accum[key] = queryFields[key];
+          return accum;
+        }, {}),
+      subscriptionFields,
+      mutationFields,
+    },
+  };
 };
 
 const schemas = async (
   requester: any
-): Promise<{ schema: GraphQLSchema; fields: KSqlDBEntities } | undefined> => {
+): Promise<{ schema: GraphQLSchema; fields: ResolverFields } | undefined> => {
   try {
     const response = await requester.post(
       'ksql',
       {
-        ksql: 'show tables extended;',
+        ksql: 'show streams extended; show tables extended;',
       },
       { timeout: 1000 }
     );
@@ -157,17 +198,17 @@ const schemas = async (
       console.error(`request to ksql failed`, response);
       return;
     }
+    const streams: Array<KsqlDBResponse> = response.data[0].sourceDescriptions;
+    const tables: Array<KsqlDBResponse> = response.data[1].sourceDescriptions;
 
-    if (response.data.length === 0) {
-      throw new Error('No ksql tables created.');
+    if (streams.length === 0) {
+      throw new Error(`No ksql tables exist on ksql server ${requester.defaults.baseURL}`);
     }
 
-    const streams: Array<KsqlDBResponse> = response.data[0].sourceDescriptions;
-
-    return generateSchemaAndFields(streams);
+    return generateSchemaAndFields(streams.concat(tables));
   } catch (e) {
     // eslint-disable-next-line
-    console.error(`unable to connect to ksql`, e.message);
+    console.error(`Could not generate schemas:`, e.message);
   }
 };
 
@@ -186,9 +227,11 @@ export function buildKsqlDBGraphQL({
         if (result) {
           // eslint-disable-next-line
           console.log(printSchema(result.schema));
-          const { queryResolvers, subscriptionResolvers, mutationResolvers } = generateResolvers(
-            result.fields
-          );
+          const {
+            queryResolvers,
+            subscriptionResolvers,
+            mutationResolvers,
+          } = new ResolverGenerator(result.fields);
           resolve({
             schemas: result.schema,
             queryResolvers,
@@ -199,7 +242,8 @@ export function buildKsqlDBGraphQL({
           throw new Error('Unable to create schemas and resolvers');
         }
       } catch (e) {
-        // console.log(e);
+        throw new Error(e);
+        // noop
       }
     })();
   });

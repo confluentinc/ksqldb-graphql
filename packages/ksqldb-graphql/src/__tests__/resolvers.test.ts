@@ -1,6 +1,7 @@
 import { GraphQLSchema, GraphQLResolveInfo, GraphQLString, GraphQLObjectType } from 'graphql';
 
-import { generateResolvers, generateStatement, createInsertStatement } from '../resolvers';
+import { ResolverGenerator, createInsertStatement } from '../resolvers';
+import { ResolverFields } from '../type/definition';
 
 jest.mock('http2', () => {
   return {
@@ -54,36 +55,73 @@ const testGraphQL = () => {
   return info;
 };
 
+function resolverPayload(fields): ResolverFields {
+  return {
+    queryFields: fields,
+    mutationFields: fields,
+    subscriptionFields: fields,
+  };
+}
+
 describe('resolvers', () => {
   it('takes graphql and maps a command', () => {
+    const fields = {
+      one: { type: GraphQLString, args: { ';Drop TABLES;viewtime': { type: GraphQLString } } },
+      two: { type: GraphQLString },
+    };
+
     const info = testGraphQL();
-    const resolvedValue = generateStatement(info, {});
-    expect(resolvedValue).toEqual(
-      'select %3BDrop%20TABLES%3Bviewtime from PAGEVIEWS_ORIGINAL emit changes;'
-    );
+    const resolver = new ResolverGenerator(resolverPayload(fields));
+    const resolvedValue = resolver.generateStatement(info, {});
+    expect(resolvedValue).toEqual('select %3BDrop%20TABLES%3Bviewtime from PAGEVIEWS_ORIGINAL');
   });
+
+  it('filters out fields that ksql does not know about', () => {
+    const fields = {
+      one: {
+        type: GraphQLString,
+        args: { viewtime: { type: GraphQLString }, command: { type: GraphQLString } },
+      },
+      two: { type: GraphQLString },
+    };
+    const info = testGraphQL();
+    const resolver = new ResolverGenerator(resolverPayload(fields));
+    const resolvedValue = resolver.generateStatement(info, {});
+    expect(resolvedValue).toEqual(`select command from PAGEVIEWS_ORIGINAL`);
+  });
+
+  it('throws an error if all fields have been filtered out', () => {
+    const info = testGraphQL();
+    const resolver = new ResolverGenerator(resolverPayload({}));
+    expect(() => resolver.generateStatement(info, {})).toThrowError();
+  });
+
   it('creates an insert statement', () => {
     const info = testGraphQL();
-    const resolvedValue = createInsertStatement(info, { VIEWTIME: ';DROP TABLES', ROWKEY: 69 });
+    const resolvedValue = createInsertStatement(info, {
+      VIEWTIME: ';DROP TABLES',
+      ROWKEY: 69,
+    });
     expect(resolvedValue).toEqual(
       `INSERT INTO PAGEVIEWS_ORIGINAL (VIEWTIME, ROWKEY) VALUES ('%3BDROP%20TABLES', 69);`
     );
   });
   it('creates resolvers for queries and subscriptions', () => {
     const fields = { one: { type: GraphQLString }, two: { type: GraphQLString } };
-    const resolvers = generateResolvers(fields);
-    expect(Object.keys(resolvers).length).toEqual(3);
-    const { mutationResolvers, queryResolvers, subscriptionResolvers } = resolvers;
+    const resolver = new ResolverGenerator({
+      queryFields: { one: fields.one },
+      mutationFields: fields,
+      subscriptionFields: { two: fields.two },
+    });
+    const { mutationResolvers, queryResolvers, subscriptionResolvers } = resolver;
     expect(mutationResolvers).toEqual({
       one: expect.any(Function),
       two: expect.any(Function),
     });
     expect(queryResolvers).toEqual({
       one: expect.any(Function),
-      two: expect.any(Function),
     });
     expect(subscriptionResolvers).toEqual({
-      one: { subscribe: expect.any(Function) },
       two: { subscribe: expect.any(Function) },
     });
   });
