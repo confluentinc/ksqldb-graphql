@@ -1,7 +1,5 @@
-import { connect, ClientHttp2Session } from 'http2';
-
 import { FieldNode, GraphQLResolveInfo } from 'graphql';
-import { asyncIteratorQueryStream } from '@ksqldb/client';
+import { ddl, asyncIteratorQueryStream } from '@ksqldb/client';
 
 import {
   Resolver,
@@ -9,31 +7,6 @@ import {
   ResolverFields,
   KsqlDBGraphResolver,
 } from './type/definition';
-
-/*
- * Creates an http2 session
- * this is used in conjunction with klip-15 to talk to the ksqlDB api
- */
-const createSession = (): ClientHttp2Session | void => {
-  try {
-    /*
-     * in ksqlDB server do:
-     * ksql.new.api.enabled=true
-     * ksql.apiserver.listen.port=8089
-     */
-    const ksqlDBServer = `http://localhost:8089`;
-    const session = connect(ksqlDBServer);
-    session.on('error', error => {
-      // eslint-disable-next-line
-      console.error(error);
-    });
-    return session;
-  } catch (e) {
-    // eslint-disable-next-line
-    console.error(e.message);
-  }
-};
-const session: ClientHttp2Session = createSession() as ClientHttp2Session;
 
 /*
  * Example graphQL:
@@ -89,7 +62,7 @@ export class ResolverGenerator {
    * A list of fields available in ksqlDB
    * Used to filter out an internal graphql stuff that could affect query generation
    */
-  whitelistFields = new Set();
+  whitelistFields: Set<string> = new Set();
 
   /*
    * A map of resolvers for the `Query` in graphql
@@ -203,12 +176,12 @@ export class ResolverGenerator {
    * https://docs.ksqldb.io/en/latest/concepts/queries/pull/#pull-query-features-and-limitations
    * a generic form of these does not really exist (eg taking the latest of every field) - https://github.com/confluentinc/ksql/issues/3985
    */
-  handleQueryResolve: KsqlDBGraphResolver = async (obj, args, context, info): Promise<any> => {
+  handleQueryResolve: KsqlDBGraphResolver = async (obj, args, { ksqlDB }, info): Promise<any> => {
     const sql = `${this.generateStatement(info, args)};`;
     if (!sql) {
       return null;
     }
-    const stream = asyncIteratorQueryStream(session, { sql }, 'query');
+    const stream = asyncIteratorQueryStream(ksqlDB.session, { sql }, 'query');
     for await (const row of stream) {
       // both of these are possible, seems like a bug in @ksqldb/client
       // { query: { COUNT: { value: [Array], done: true } } }
@@ -235,28 +208,40 @@ export class ResolverGenerator {
   /*
    * Modifies the generic ksql statement and converts it into a push query
    */
-  handleSubscriptionResolve: KsqlDBGraphResolver = async (obj, args, context, info) => {
+  handleSubscriptionResolve: KsqlDBGraphResolver = async (obj, args, { ksqlDB }, info) => {
     const sql = `${this.generateStatement(info, args)} emit changes;`;
 
     if (!sql) {
       return Promise.resolve(new Error('Unable to generate ksqlDB from graphql statement.'));
     }
     const nameKey = getNameFromResolveInfo(info) as string;
-    const stream = asyncIteratorQueryStream(session, { sql }, nameKey);
+    const stream = asyncIteratorQueryStream(ksqlDB.session, { sql }, nameKey);
     return stream;
   };
 
   /*
    * Creates insert statements to add new messages
    */
-  handleMutationResolve: KsqlDBGraphResolver = async (obj, args, context, info) => {
-    const { requester } = context;
+  handleMutationResolve: KsqlDBGraphResolver = async (obj, args, { ksqlDB }, info) => {
+    const { requester, session } = ksqlDB;
     const command = createInsertStatement(info, args);
     try {
-      const response = await requester.post('ksql', { ksql: command });
+      if (!command) {
+        throw new Error('Unable to create insert statement from graphql args');
+      }
+      let response = await ddl(session, { ksql: command });
+      if (response.status === 404) {
+        // eslint-disable-next-line
+        console.warn('new api unavailable, falling back to default REST.')
+        response = await requester.post('ksql', { ksql: command });
+        return { command, status: response.status };
+      }
       return { command, status: response.status };
     } catch (e) {
-      throw new Error(e.response.data.message);
+      if (e.response) {
+        throw new Error(e.response.data.message);
+      }
+      throw new Error(e);
     }
   };
 }

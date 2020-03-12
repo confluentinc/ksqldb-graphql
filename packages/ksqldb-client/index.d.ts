@@ -1,6 +1,6 @@
 import { ClientHttp2Session } from 'http2';
 
-import { QueryStreamArgs, AsyncIteratorQueryStream } from './src/client';
+import { QueryStreamArgs, AsyncIteratorQueryStream } from './src/queryStream';
 
 declare module '@ksqldb/client' {
   export const asyncIteratorQueryStream: (

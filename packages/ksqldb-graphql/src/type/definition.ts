@@ -1,3 +1,5 @@
+import { ClientHttp2Session } from 'http2';
+
 import {
   GraphQLFieldResolver,
   GraphQLObjectType,
@@ -13,6 +15,8 @@ export interface KSqlDBEntities {
 }
 
 export type Request = (url: string, body: any, args: any) => void;
+type KsqDBContext = { ksqlDB: { requester: any; session: ClientHttp2Session } };
+
 export interface Config {
   requester: any;
 }
@@ -55,14 +59,14 @@ export interface KsqlDBResponse {
   replication: number;
 }
 export interface Resolver {
-  [key: string]: GraphQLFieldResolver<void, { requester: any }>;
+  [key: string]: GraphQLFieldResolver<void, KsqDBContext>;
 }
 export interface SubscriptionResolver {
   [name: string]: {
     subscribe: (
       obj: void,
       args: { [key: string]: string },
-      context: { requester: any },
+      context: KsqDBContext,
       info: GraphQLResolveInfo
     ) => Promise<void>;
   };
@@ -70,7 +74,7 @@ export interface SubscriptionResolver {
 
 export type KsqlDBGraphResolver = GraphQLFieldResolver<
   void,
-  { requester: any },
+  KsqDBContext,
   { [argName: string]: string }
 >;
 

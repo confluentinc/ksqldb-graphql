@@ -1,9 +1,36 @@
+import { connect, ClientHttp2Session } from 'http2';
+
 import { ApolloServer } from 'apollo-server';
 import { buildKsqlDBGraphQL } from '@ksqldb/graphql';
 import { addResolveFunctionsToSchema } from 'graphql-tools';
 import axios from 'axios';
 
 import { ksqlServer } from './index';
+
+/*
+ * Creates an http2 session
+ * this is used in conjunction with klip-15 to talk to the ksqlDB api
+ */
+const createSession = (): ClientHttp2Session | void => {
+  try {
+    /*
+     * in ksqlDB server do:
+     * ksql.new.api.enabled=true
+     * ksql.apiserver.listen.port=8089
+     */
+    const ksqlDBServer = `http://localhost:8089`;
+    const session = connect(ksqlDBServer);
+    session.on('error', error => {
+      // eslint-disable-next-line
+      console.error(error);
+    });
+    return session;
+  } catch (e) {
+    // eslint-disable-next-line
+    console.error(e.message);
+  }
+};
+const session: ClientHttp2Session = createSession() as ClientHttp2Session;
 
 const instance = axios.create({
   baseURL: ksqlServer,
@@ -19,12 +46,12 @@ buildKsqlDBGraphQL({ requester: instance }).then(
     };
     const schema = addResolveFunctionsToSchema({ schema: schemas, resolvers: apolloResolvers });
     const server = new ApolloServer({
-      context: async () => {
-        return {
-          // TODO make this generic enough that anything can be used
+      context: async (): Promise<any> => ({
+        ksqlDB: {
           requester: instance,
-        };
-      },
+          session,
+        },
+      }),
       schema,
       subscriptions: {
         keepAlive: 1000,

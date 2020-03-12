@@ -15,11 +15,13 @@ The prebuild step, `buildKsqlDBGraphQL`, returns a promise and should be called 
 # Usage
 
 ```js
+import { connect } from 'http2';
 import { ApolloServer } from 'apollo-server';
 import { buildKsqlDBGraphQL } from '@ksqldb/graphql';
 import { addResolveFunctionsToSchema } from 'graphql-tools';
 import axios from 'axios';
 
+const session = connect(`http://localhost:8089`);
 const instance = axios.create({
   baseURL: ksqlServer,
   timeout: 1000,
@@ -34,11 +36,12 @@ buildKsqlDBGraphQL({ requester: instance }).then(
     };
     const schema = addResolveFunctionsToSchema({ schema: schemas, resolvers: apolloResolvers });
     const server = new ApolloServer({
-      context: async () => {
-        return {
+      context: async () => ({
+        ksqlDB: {
           requester: instance,
-        };
-      },
+          session,
+        },
+      }),
       schema,
       subscriptions: {
         keepAlive: 1000,

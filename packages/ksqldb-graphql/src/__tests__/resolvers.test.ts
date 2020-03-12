@@ -3,14 +3,6 @@ import { GraphQLSchema, GraphQLResolveInfo, GraphQLString, GraphQLObjectType } f
 import { ResolverGenerator, createInsertStatement } from '../resolvers';
 import { ResolverFields } from '../type/definition';
 
-jest.mock('http2', () => {
-  return {
-    connect: (): any => ({
-      on: jest.fn(),
-    }),
-  };
-});
-
 const testGraphQL = () => {
   const objType = new GraphQLObjectType({
     name: 'PAGEVIEWS_ORIGINAL',

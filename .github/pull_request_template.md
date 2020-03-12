@@ -4,4 +4,4 @@
 
 
 - [ ] Docs are updated if necessary. (eg. if a user visible feature is being added or changed).
-- [ ] Description includes text like "[ISSUE <issue number>] <commit message>")
+- [ ] Description includes text like [ISSUE #] `commit message`.
