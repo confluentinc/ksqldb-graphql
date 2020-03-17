@@ -182,7 +182,7 @@ type KSQL_PROCESSING_LOG {
 
 type KsqlDBMutation {
   command: String
-  status: Int
+  statusCode: String
 }
 
 type MESSAGE {

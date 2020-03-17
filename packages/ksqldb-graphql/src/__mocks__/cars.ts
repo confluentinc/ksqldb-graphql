@@ -85,7 +85,7 @@ type CARS_COUNT {
 
 type KsqlDBMutation {
   command: String
-  status: Int
+  statusCode: String
 }
 
 type Mutation {
