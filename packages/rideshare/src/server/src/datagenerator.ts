@@ -28,13 +28,14 @@ type Payload = {
   description: string;
 };
 const createStatement = `create table cars (id VARCHAR, lat DOUBLE, long DOUBLE) with (KAFKA_TOPIC='cars', VALUE_FORMAT='JSON', key='id', partitions=1, replicas=1);`;
+const uniqueCars = `create table unique_cars as select ID, count(*) from cars group by id emit changes;`;
 
 async function generateData(id: string, route: number): Promise<void> {
   try {
     await axios.post(
       `${ksqlServer}ksql`,
       {
-        ksql: createStatement,
+        ksql: `${createStatement}${uniqueCars}`,
       },
       { timeout: 1000 }
     );
@@ -44,7 +45,7 @@ async function generateData(id: string, route: number): Promise<void> {
       console.error(e.response?.data?.message);
     } else {
       // eslint-disable-next-line
-      console.error(e);
+      console.error(e.code);
     }
   }
 
