@@ -22,6 +22,7 @@
     "graphql": "14.6.0",
     "react": "16.13.0",
     "react-dom": "16.13.0",
+    "lerna": "3.20.2",
     "styled-components": "5.0.1",
     "subscriptions-transport-ws": "0.9.16",
     "ts-node": "8.6.2",
@@ -31,7 +32,8 @@
     "lint": "eslint . --report-unused-disable-directives --ext .tsx,.js",
     "in": "yarn install --frozen-lockfile --prefer-offline",
     "test": "jest",
-    "rideshare": "yarn workspace @ksqldb/rideshare start"
+    "rideshare": "yarn workspace @ksqldb/graphql-rideshare start",
+    "release": "yarn in && lerna publish"
   },
   "eslintConfig": {
     "extends": "react-app"

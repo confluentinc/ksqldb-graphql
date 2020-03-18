@@ -1,8 +1,21 @@
 {
   "npmClient": "yarn",
+  "version": "0.0.0",
   "useWorkspaces": true,
   "packages": [
     "packages/*"
   ],
-  "version": "0.0.0"
+  "command": {
+    "publish": {
+      "allowBranch": [
+        "master"
+      ],
+      "conventionalCommits": true,
+      "message": "chore: publish release %s",
+      "registry": "https://confluent.jfrog.io/confluent/api/npm/npm-internal/",
+      "requireScripts": true,
+      "verifyAccess": false,
+      "verifyRegistry": false
+    }
+  }
 }

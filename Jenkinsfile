@@ -25,6 +25,24 @@ def unitTestsStage(buildData, params) {
     }
 }
 
+def buildJsStage(buildData, params, env) {
+    stage('build') {
+        if (!buildData.isPrJob && params.PUBLISH_A_RELEASE) {
+            withCredentials([
+                string(credentialsId: 'JENKINS_ARTIFACTORY_NPM_TOKEN', variable: 'NPM_TOKEN'),
+                string(credentialsId: 'JENKINS_GITHUB_PERSONAL_ACCESS_TOKEN', variable: 'GH_TOKEN'),
+            ]) {
+                sh "echo '@confluent:registry=https://confluent.jfrog.io/confluent/api/npm/npm-internal/' >> \$HOME/.npmrc"
+                sh "echo '//confluent.jfrog.io/confluent/api/npm/npm-internal/:_auth=${env.NPM_TOKEN}' >> \$HOME/.npmrc"
+                sh "echo '//confluent.jfrog.io/confluent/api/npm/npm-internal/:always-auth=true' >> \$HOME/.npmrc"
+
+                sshagent(['ConfluentJenkins Github SSH Key']) {
+                    sh "yarn release --create-release=github --yes"
+                }
+            }
+        }
+    }
+}
 
 node('docker-node8') {
 
@@ -35,10 +53,6 @@ node('docker-node8') {
         isPrJob: !(env.JOB_NAME.startsWith('confluentinc/') || env.JOB_NAME.startsWith('confluentinc-post/')),
         revision: '',
     ]
-
-    if (buildData.isPrJob) {
-        buildData.isCpBranch = env.CHANGE_TARGET.startsWith('cp-')
-    }
 
     properties([
         buildDiscarder(
@@ -82,7 +96,7 @@ node('docker-node8') {
                     userRemoteConfigs: [
                         [
                             credentialsId: 'ConfluentJenkins Github SSH Key',
-                            url: 'git@github.com:confluentinc/frontend-vault.git'
+                            url: 'git@github.com:confluentinc/ksqldb-graphql.git'
                         ]
                     ]
                 ]
@@ -114,13 +128,21 @@ node('docker-node8') {
             '''
         }
 
-        def pStages = ['linting', 'unit tests'].collectEntries {stageLabel -> [stageLabel, {
+        def pStages = ['linting', 'unit tests', 'buildJs'].collectEntries {stageLabel -> [stageLabel, {
             if (stageLabel == 'linting') {
                 lintStages(buildData, params)
             }
 
             if (stageLabel == 'unit tests') {
                 unitTestsStage(buildData, params)
+            }
+            if (stageLabel == 'buildJs') {
+                try {
+                  buildJsStage(buildData, params, env)
+                } catch (Exception e){
+                  buildData.buildJsStatus = 'Failure'
+                  throw e
+                }
             }
 
         }]}
