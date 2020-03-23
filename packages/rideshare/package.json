@@ -24,7 +24,7 @@
     "start": "yarn ts-node --project ../../tsconfig.json src/runner.ts"
   },
   "dependencies": {
-    "react-scripts": "3.4.0",
+    "react-scripts": "3.4.1",
     "serve": "11.3.0"
   }
 }
