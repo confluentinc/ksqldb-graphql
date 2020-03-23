@@ -2,6 +2,7 @@
   "name": "@ksqldb/rideshare-server",
   "version": "0.0.0",
   "description": "rideshare server",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/confluentinc/ksqldb-graphql.git"

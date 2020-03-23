@@ -29,12 +29,10 @@ def buildJsStage(buildData, params, env) {
     stage('build') {
         if (!buildData.isPrJob && params.PUBLISH_A_RELEASE) {
             withCredentials([
-                string(credentialsId: 'JENKINS_ARTIFACTORY_NPM_TOKEN', variable: 'NPM_TOKEN'),
                 string(credentialsId: 'JENKINS_GITHUB_PERSONAL_ACCESS_TOKEN', variable: 'GH_TOKEN'),
+                string(credentialsId: 'confluent-npm', variable: 'NPM_TOKEN'),
             ]) {
-                sh "echo '@confluent:registry=https://confluent.jfrog.io/confluent/api/npm/npm-internal/' >> \$HOME/.npmrc"
-                sh "echo '//confluent.jfrog.io/confluent/api/npm/npm-internal/:_auth=${env.NPM_TOKEN}' >> \$HOME/.npmrc"
-                sh "echo '//confluent.jfrog.io/confluent/api/npm/npm-internal/:always-auth=true' >> \$HOME/.npmrc"
+                sh "echo '//registry.npmjs.org/:_authToken=${env.NPM_TOKEN}' >> \$HOME/.npmrc"
 
                 sshagent(['ConfluentJenkins Github SSH Key']) {
                     sh "yarn release --create-release=github --yes"

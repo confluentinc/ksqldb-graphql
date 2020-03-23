@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "rideshare example",
   "type": "module",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/confluentinc/ksqldb-graphql.git"
