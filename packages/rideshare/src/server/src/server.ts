@@ -1,7 +1,7 @@
 import { connect, ClientHttp2Session } from 'http2';
 
 import { ApolloServer } from 'apollo-server';
-import { buildKsqlDBGraphQL } from '@ksqldb/graphql';
+import { generateGraphQL } from '@confluentinc/ksqldb-graphql';
 import { addResolveFunctionsToSchema } from 'graphql-tools';
 
 import { ksqlDBOpts as options } from './index';
@@ -26,7 +26,7 @@ const createSession = (): ClientHttp2Session | void => {
 };
 const session: ClientHttp2Session = createSession() as ClientHttp2Session;
 
-buildKsqlDBGraphQL({
+generateGraphQL({
   options
 }).then(
   ({ schemas, queryResolvers, subscriptionResolvers, mutationResolvers }) => {

@@ -1,5 +1,5 @@
 {
-  "name": "@ksqldb/graphql-rideshare",
+  "name": "@confluentinc/ksqldb-rideshare",
   "version": "0.1.0",
   "description": "rideshare example",
   "type": "module",

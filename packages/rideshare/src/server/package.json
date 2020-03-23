@@ -11,6 +11,6 @@
   "main": "src/index.ts",
   "module": "src/index.ts",
   "dependencies": {
-    "@ksqldb/graphql": "0.0.0"
+    "@confluentinc/ksqldb-graphql": "0.0.0"
   }
 }

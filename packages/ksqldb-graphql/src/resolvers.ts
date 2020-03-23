@@ -1,5 +1,5 @@
 import { FieldNode, GraphQLResolveInfo } from 'graphql';
-import { ddl, asyncIteratorQueryStream } from '@ksqldb/client';
+import { ddl, asyncIteratorQueryStream } from '@confluentinc/ksqldb-client';
 import { runCommand } from './requester';
 
 import {

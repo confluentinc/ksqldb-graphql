@@ -1,5 +1,5 @@
 {
-  "name": "ksqldb",
+  "name": "@confluentinc/ksqldb-graphql-packages",
   "version": "0.0.0",
   "private": true,
   "workspaces": [
@@ -32,7 +32,7 @@
     "lint": "eslint . --report-unused-disable-directives --ext .tsx,.js",
     "in": "yarn install --frozen-lockfile --prefer-offline",
     "test": "jest",
-    "rideshare": "yarn workspace @ksqldb/graphql-rideshare start",
+    "rideshare": "yarn workspace @confluentinc/ksqldb-rideshare start",
     "release": "yarn in && lerna publish"
   },
   "eslintConfig": {
