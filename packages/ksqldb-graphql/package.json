@@ -1,6 +1,6 @@
 {
   "name": "@ksqldb/graphql",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "graphql utilities for ksqldb",
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
     "test": "react-scripts test"
   },
   "dependencies": {
-    "axios": "^0.19.2",
-    "@ksqldb/client": "0.0.0"
+    "@ksqldb/client": "^0.1.0",
+    "axios": "^0.19.2"
   }
 }

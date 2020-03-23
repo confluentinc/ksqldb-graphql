@@ -1,6 +1,6 @@
 {
   "name": "@ksqldb/graphql-rideshare",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "rideshare example",
   "type": "module",
   "repository": {
