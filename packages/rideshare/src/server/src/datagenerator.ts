@@ -1,8 +1,8 @@
 import { stringify, parse } from 'querystring';
+import { runCommand } from '@ksqldb/graphql';
+import { request } from 'https';
 
-import axios from 'axios';
-
-import { ksqlServer } from './index';
+import { ksqlDBOpts } from './index';
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -30,44 +30,55 @@ type Payload = {
 const createStatement = `create table cars (id VARCHAR, lat DOUBLE, long DOUBLE) with (KAFKA_TOPIC='cars', VALUE_FORMAT='JSON', key='id', partitions=1, replicas=1);`;
 const uniqueCars = `create table unique_cars as select ID, count(*) from cars group by id emit changes;`;
 
+
+const getRoute = (route: number): Promise<{ data: string }> => {
+  const payload = stringify({ rId: route })
+  return new Promise(resolve => {
+    let data = '';
+    const req = request('https://www.gmap-pedometer.com/gp/ajaxRoute/get',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(payload)
+        }
+      }, (res) => {
+
+        res.on('data', d => {
+          data += Buffer.from(d).toString();
+        })
+
+      });
+    req.on('close', () => {
+      resolve({ data })
+    })
+    req.end(payload, 'utf-8');
+  })
+}
 async function generateData(id: string, route: number): Promise<void> {
   try {
-    await axios.post(
-      `${ksqlServer}ksql`,
-      {
-        ksql: `${createStatement}${uniqueCars}`,
-      },
-      { timeout: 1000 }
-    );
+    await runCommand(`${createStatement}${uniqueCars}`, ksqlDBOpts);
   } catch (e) {
-    if (e.response?.data?.message) {
+    if (e.data?.message) {
       // eslint-disable-next-line
-      console.error(e.response?.data?.message);
+      console.error(e.data?.message);
     } else {
       // eslint-disable-next-line
       console.error(e.code);
     }
   }
 
-  const response = await axios.post(
-    'https://www.gmap-pedometer.com/gp/ajaxRoute/get',
-    stringify({ rId: route })
-  );
+  const response = await getRoute(route);
   const data: Payload = parse(response.data) as Payload;
   const lines = data.polyline.split('a');
   for (let i = 0; i < lines.length; i++) {
-    // const payload = { id, lat: parseFloat(lines[i]), long: parseFloat(lines[i + 1]) };
-    const command = `insert into cars (id, lat, long) values ('${id}', ${parseFloat(
-      lines[i]
-    )}, ${parseFloat(lines[i + 1])});`;
-    await axios.post(
-      `${ksqlServer}ksql`,
-      {
-        ksql: command,
-      },
-      { timeout: 1000 }
-    );
-    // eslint-disable-next-line
+    const command = `insert into cars(id, lat, long) values('${id}', ${
+      parseFloat(
+        lines[i]
+      )
+      }, ${parseFloat(lines[i + 1])}); `;
+
+    await runCommand(command, ksqlDBOpts);
     console.log(command);
     await sleep(3000);
     i++;

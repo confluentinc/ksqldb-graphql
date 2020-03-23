@@ -1,1 +1,6 @@
-export const ksqlServer = process.env.KSQL_URL || `http://localhost:8088/`;
+const ksqlHost = process.env.KSQL_HOST || 'localhost';
+const ksqlPort = process.env.KSQL_PORT || '8088';
+export const ksqlDBOpts = {
+    hostname: ksqlHost,
+    port: ksqlPort,
+};

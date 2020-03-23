@@ -158,7 +158,7 @@ export class AsyncIteratorQueryStream<T> extends QueryStream<T> {
       if (promised.length) {
         // pending work is unfulfilled; try to read it from stream
         const next = stream.read();
-        if (next !== null) {
+        if (next != null) {
           const nextLines = this.parseChunk(next);
           received.push(...nextLines);
         }

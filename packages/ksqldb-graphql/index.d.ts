@@ -1,4 +1,5 @@
-import { Config } from './src/type/definition';
+import { RequestOptions } from 'http';
+import { KsqlDBRest, Config } from './src/type/definition';
 
 declare module '@ksqldb/graphql' {
   export const buildKsqlDBGraphQL: (
@@ -10,4 +11,5 @@ declare module '@ksqldb/graphql' {
     subscriptionResolvers: any;
     mutationResolvers: any;
   }>;
+  export const runCommand: (ksql: string, options: RequestOptions) => Promise<KsqlDBRest>;
 }

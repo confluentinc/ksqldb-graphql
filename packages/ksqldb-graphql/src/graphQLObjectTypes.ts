@@ -1,4 +1,4 @@
-import { GraphQLInt, GraphQLString, GraphQLObjectType, GraphQLScalarType } from 'graphql';
+import { GraphQLString, GraphQLObjectType, GraphQLScalarType } from 'graphql';
 
 export const Missing = {
   name: 'Missing data',
@@ -23,8 +23,8 @@ export const KsqlDBMutation = new GraphQLObjectType({
     command: {
       type: GraphQLString,
     },
-    status: {
-      type: GraphQLInt,
+    statusCode: {
+      type: GraphQLString,
     },
   },
 });

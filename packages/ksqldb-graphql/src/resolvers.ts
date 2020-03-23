@@ -1,5 +1,6 @@
 import { FieldNode, GraphQLResolveInfo } from 'graphql';
 import { ddl, asyncIteratorQueryStream } from '@ksqldb/client';
+import { runCommand } from './requester';
 
 import {
   Resolver,
@@ -223,20 +224,20 @@ export class ResolverGenerator {
    * Creates insert statements to add new messages
    */
   handleMutationResolve: KsqlDBGraphResolver = async (obj, args, { ksqlDB }, info) => {
-    const { requester, session } = ksqlDB;
+    const { options, session } = ksqlDB;
     const command = createInsertStatement(info, args);
     try {
       if (!command) {
         throw new Error('Unable to create insert statement from graphql args');
       }
-      let response = await ddl(session, { ksql: command });
-      if (response.status === 404) {
+      const response = await ddl(session, { ksql: command });
+      if (response && response.error) {
         // eslint-disable-next-line
         console.warn('new api unavailable, falling back to default REST.')
-        response = await requester.post('ksql', { ksql: command });
-        return { command, status: response.status };
+        const response = await runCommand(command, options);
+        return { command, statusCode: response.statusCode };
       }
-      return { command, status: response.status };
+      return { command, statusCode: response && response.statusCode };
     } catch (e) {
       if (e.response) {
         throw new Error(e.response.data.message);

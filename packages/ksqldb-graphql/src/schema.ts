@@ -9,10 +9,11 @@ import {
   GraphQLScalarType,
   GraphQLObjectTypeConfig,
 } from 'graphql';
-
+import { RequestOptions } from 'http';
 import { ResolverGenerator } from './resolvers';
 import { Config, Field, KsqlDBResponse, KSqlDBEntities, ResolverFields } from './type/definition';
 import { Missing, KsqlDBMutation } from './graphQLObjectTypes';
+import { runCommand } from './requester';
 
 const TypeMap = {
   STRING: GraphQLString,
@@ -182,27 +183,16 @@ export const generateSchemaAndFields = (
 };
 
 const schemas = async (
-  requester: any
+  options: RequestOptions,
 ): Promise<{ schema: GraphQLSchema; fields: ResolverFields } | undefined> => {
+  const ksql = 'show streams extended; show tables extended;';
   try {
-    const response = await requester.post(
-      'ksql',
-      {
-        ksql: 'show streams extended; show tables extended;',
-      },
-      { timeout: 1000 }
-    );
-
-    if (response.status !== 200) {
-      // eslint-disable-next-line
-      console.error(`request to ksql failed`, response);
-      return;
-    }
+    const response = await runCommand(ksql, options);
     const streams: Array<KsqlDBResponse> = response.data[0].sourceDescriptions;
     const tables: Array<KsqlDBResponse> = response.data[1].sourceDescriptions;
 
     if (streams.length === 0) {
-      throw new Error(`No ksql tables exist on ksql server ${requester.defaults.baseURL}`);
+      throw new Error(`No ksql tables exist on ksql server ${options.hostname}:${options.port}`);
     }
 
     return generateSchemaAndFields(streams.concat(tables));
@@ -213,7 +203,7 @@ const schemas = async (
 };
 
 export function buildKsqlDBGraphQL({
-  requester,
+  options,
 }: Config): Promise<{
   schemas: any;
   queryResolvers: any;
@@ -223,7 +213,7 @@ export function buildKsqlDBGraphQL({
   return new Promise(resolve => {
     (async function run(): Promise<void> {
       try {
-        const result = await schemas(requester);
+        const result = await schemas(options);
         if (result) {
           // eslint-disable-next-line
           console.log(printSchema(result.schema));

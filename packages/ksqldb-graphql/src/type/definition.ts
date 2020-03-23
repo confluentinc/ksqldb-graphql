@@ -1,4 +1,5 @@
 import { ClientHttp2Session } from 'http2';
+import { RequestOptions } from 'http';
 
 import {
   GraphQLFieldResolver,
@@ -15,10 +16,10 @@ export interface KSqlDBEntities {
 }
 
 export type Request = (url: string, body: any, args: any) => void;
-type KsqDBContext = { ksqlDB: { requester: any; session: ClientHttp2Session } };
+type KsqDBContext = { ksqlDB: { options: RequestOptions; session: ClientHttp2Session } };
 
 export interface Config {
-  requester: any;
+  options: RequestOptions;
 }
 type KsqldbType = 'BIGINT' | 'STRING' | 'INTEGER' | 'ARRAY' | 'VARCHAR' | 'STRUCT';
 export interface MemberSchema {
@@ -83,3 +84,13 @@ export type ResolverFields = {
   subscriptionFields: GraphQLFieldConfigMap<any, any, any>;
   mutationFields: GraphQLFieldConfigMap<any, any, any>;
 };
+
+export type KsqlDBRest = {
+  statusCode: number,
+  data: Array<{
+    '@type': 'source_descriptions',
+    statementText: string,
+    sourceDescriptions: Array<KsqlDBResponse>,
+    warnings: []
+  }>
+}
