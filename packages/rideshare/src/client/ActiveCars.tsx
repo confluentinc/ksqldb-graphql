@@ -24,7 +24,7 @@ export default function ActiveCars(): JSX.Element {
             value={selectedCar}
           >
             <option value="select">Select car...</option>
-            {carKeys.map(car => (
+            {carKeys.map((car) => (
               <option key={car} value={car}>
                 {car}
               </option>

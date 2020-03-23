@@ -21,7 +21,7 @@ export default function RideshareMap({ google }: MapProps): JSX.Element {
       <Sidebar />
       <Map google={google} initialCenter={{ lat: 47.612295, lng: -122.331734 }} zoom={14}>
         {cars &&
-          Object.keys(cars).map(name => {
+          Object.keys(cars).map((name) => {
             return <Car key={name} name={name} rowKey={name} />;
           })}
       </Map>
