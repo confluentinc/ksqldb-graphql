@@ -11,11 +11,7 @@
         "master"
       ],
       "conventionalCommits": true,
-      "message": "chore: publish release %s",
-      "registry": "https://confluent.jfrog.io/confluent/api/npm/npm-internal/",
-      "requireScripts": true,
-      "verifyAccess": false,
-      "verifyRegistry": false
+      "message": "chore: publish release %s"
     }
   }
 }
