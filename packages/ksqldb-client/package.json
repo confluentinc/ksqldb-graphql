@@ -1,6 +1,6 @@
 {
   "name": "@confluentinc/ksqldb-client",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "main": "index.ts",
   "scripts": {
     "build": "tsc --declaration",
