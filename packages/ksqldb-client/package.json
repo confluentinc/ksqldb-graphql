@@ -1,6 +1,13 @@
 {
   "name": "@confluentinc/ksqldb-client",
   "version": "0.1.5",
+  "description": "client bindings for interacting with ksql",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/confluentinc/ksqldb-graphql.git"
+  },
+  "author": "Joseph Rea <joseph@confluent.io>",
+  "license": "Apache-2.0",
   "main": "index.ts",
   "scripts": {
     "build": "tsc --declaration",
@@ -19,5 +26,8 @@
     "@thi.ng/rstream": "3.0.7",
     "@thi.ng/transducers": "6.4.1",
     "ws": "7.2.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

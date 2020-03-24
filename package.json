@@ -2,6 +2,8 @@
   "name": "@confluentinc/ksqldb-graphql-packages",
   "version": "0.0.0",
   "private": true,
+  "author": "Joseph Rea <joseph@confluent.io>",
+  "license": "Apache-2.0",
   "workspaces": [
     "packages/*"
   ],

@@ -7,7 +7,8 @@
     "url": "https://github.com/confluentinc/ksqldb-graphql.git"
   },
   "homepage": "https://github.com/confluentinc/ksqldb-graphql/blob/master/packages/graphql",
-  "license": "UNLICENSED",
+  "author": "Joseph Rea <joseph@confluent.io>",
+  "license": "Apache-2.0",
   "main": "index.ts",
   "module": "index.ts",
   "files": [
@@ -17,7 +18,16 @@
     "lint": "eslint . --report-unused-disable-directives --ext .tsx,.ts",
     "test": "react-scripts test"
   },
+  "keywords": [
+    "ksql",
+    "ksqldb",
+    "graphql",
+    "confluent"
+  ],
   "dependencies": {
     "@confluentinc/ksqldb-client": "^0.1.5"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
