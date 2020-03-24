@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/confluentinc/ksqldb-graphql/compare/v0.1.3...v0.1.4) (2020-03-24)
+
+**Note:** Version bump only for package @confluentinc/ksqldb-graphql
+
+
+
+
+
 ## [0.1.3](https://github.com/confluentinc/ksqldb-graphql/compare/v0.1.2...v0.1.3) (2020-03-24)
 
 **Note:** Version bump only for package @confluentinc/ksqldb-graphql
