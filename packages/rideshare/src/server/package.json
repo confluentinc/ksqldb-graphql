@@ -8,8 +8,7 @@
     "url": "https://github.com/confluentinc/ksqldb-graphql.git"
   },
   "author": "Joseph Rea <joseph@confluent.io>",
-  "license": "Apache-2.0",
-  "homepage": "https://github.com/confluentinc/ksqldb-graphql/blob/master/packages/rideshare",
+  "license": "SEE LICENSE IN LICENSE",
   "main": "src/index.ts",
   "module": "src/index.ts",
   "dependencies": {
