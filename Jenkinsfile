@@ -35,7 +35,7 @@ def buildJsStage(buildData, params, env) {
                 sh "echo '//registry.npmjs.org/:_authToken=${env.NPM_TOKEN}' >> \$HOME/.npmrc"
 
                 sshagent(['ConfluentJenkins Github SSH Key']) {
-                    sh "yarn release --create-release=github --yes"
+                    sh "yarn release --force-publish --create-release=github --yes"
                 }
             }
         }
