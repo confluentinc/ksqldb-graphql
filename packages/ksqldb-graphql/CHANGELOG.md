@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/confluentinc/ksqldb-graphql/compare/v0.1.0...v0.1.1) (2020-03-24)
+
+
+### Bug Fixes
+
+* update to use proxy ksql server, remove axios ([8f3f303](https://github.com/confluentinc/ksqldb-graphql/commit/8f3f303794cdc32f75acf3e61fc7cf696f7740c8))
+
+
+
+
+
 # 0.1.0 (2020-03-23)
 
 

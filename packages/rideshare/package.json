@@ -1,6 +1,6 @@
 {
   "name": "@confluentinc/ksqldb-rideshare",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "rideshare example",
   "type": "module",
   "private": true,
