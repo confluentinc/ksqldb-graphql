@@ -5,14 +5,13 @@
   "packages": [
     "packages/*"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "command": {
+    "version": {
+      "allowBranch": "master"
+    },
     "publish": {
-      "allowBranch": [
-        "master"
-      ],
+      "access": "public",
+      "allowBranch": "master",
       "conventionalCommits": true,
       "message": "chore: publish release %s"
     }
