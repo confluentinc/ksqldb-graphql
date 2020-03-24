@@ -4,6 +4,7 @@
   "private": true,
   "author": "Joseph Rea <joseph@confluent.io>",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/confluentinc/ksqldb-graphql#readme",
   "workspaces": [
     "packages/*"
   ],
