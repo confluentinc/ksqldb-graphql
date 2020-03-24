@@ -5,6 +5,9 @@
   "packages": [
     "packages/*"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "command": {
     "publish": {
       "allowBranch": [
