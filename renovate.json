@@ -1,5 +1,4 @@
 {
- "extends": ["config:js-app", ":semanticCommits", ":semanticCommitTypeAll(chore)"],
- "automerge": true,
- "schedule": "before 3am on Monday"
+ "extends": ["config:js-app", ":semanticCommits", ":semanticCommitTypeAll(chore)", "schedule:earlyMondays"],
+ "automerge": true
 }
