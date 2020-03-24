@@ -1,6 +1,6 @@
 {
   "name": "@confluentinc/ksqldb-graphql",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "graphql utilities for ksqldb",
   "repository": {
     "type": "git",
@@ -18,6 +18,6 @@
     "test": "react-scripts test"
   },
   "dependencies": {
-    "@confluentinc/ksqldb-client": "^0.1.1"
+    "@confluentinc/ksqldb-client": "^0.1.2"
   }
 }
