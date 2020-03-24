@@ -2,7 +2,7 @@
 Generates a graphQL schema and resolvers from an existing ksqlDB server using the [ksqlDB http2 API](https://github.com/confluentinc/ksql/pull/4069).
 
 ## Installation
-`yarn install @confluentinc/ksqldb-graphql`
+`yarn add @confluentinc/ksqldb-graphql`
 
 ## Integration
 `generateGraphQL({ options })` - accepts [RequestOptions](https://nodejs.org/api/http.html#http_http_request_options_callback) and returns a promise with schemas and resolvers for use in a graphQL server.
