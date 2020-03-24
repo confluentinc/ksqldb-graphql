@@ -1,6 +1,6 @@
 {
   "name": "@confluentinc/ksqldb-client",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "client bindings for interacting with ksql",
   "repository": {
     "type": "git",
