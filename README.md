@@ -5,7 +5,7 @@ GraphQL integration for ksqlDB to facilitate easier app creation by abstracting 
 [KLIP-15](https://github.com/confluentinc/ksql/pull/4069) creates a new API with which to interact. This repository contains packages to generate graphQL as well as handle the ksqlDB protocol. 
 
 # Installation
-`yarn install @confluentinc/ksqldb-graphql`
+`yarn add @confluentinc/ksqldb-graphql`
  
 # Integration
 For statements to be executed against ksqDB, [RequestOptions](https://nodejs.org/api/http.html#http_http_request_options_callback) must be provided, both at startup and in the context of the graphQL resolvers.
