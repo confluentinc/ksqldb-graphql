@@ -1,19 +1,18 @@
 # ksqldb-graphql
-Graphql integration for ksqldb
+GraphQL integration for ksqlDB to facilitate easier app creation by abstracting ksqlDB syntax and protocol.
 
 # Background
-Because of ksqldb [klip-15](https://github.com/confluentinc/ksql/pull/4069), there will be a new API with which to interact. This library contains graphql wrappers around that API in order to facilitate easier app creation.
+[KLIP-15](https://github.com/confluentinc/ksql/pull/4069) creates a new API with which to interact. This repository contains packages to generate graphQL as well as handle the ksqlDB protocol. 
 
 # Installation
 `yarn install @confluentinc/ksqldb-graphql`
  
 # Integration
-For statements to be executed against ksqdb, [RequestOptions](https://nodejs.org/api/http.html#http_http_request_options_callback) must be provided, both at startup and in the context of the graphql resolvers.
+For statements to be executed against ksqDB, [RequestOptions](https://nodejs.org/api/http.html#http_http_request_options_callback) must be provided, both at startup and in the context of the graphQL resolvers.
 
-The prebuild step, `generateGraphQL`, returns a promise and should be called prior to starting the graphql server.
+The prebuild step, `generateGraphQL`, returns a promise and should be called prior to starting a graphQL server.
 
 # Usage
-
 ```js
 import { connect } from 'http2';
 import { ApolloServer } from 'apollo-server';
@@ -55,7 +54,10 @@ generateGraphQL({ options }).then(
 
 # Packages
 ### @confluentinc/ksqldb-graphql
-The main graphql package. This generates the schema and resolvers based on an existing ksqldb cluster.
+Generates the schema and resolvers based on an existing ksqlDB cluster.
+
+### @confluentinc/ksqldb-client
+Resolves the ksqlDB protocol and executes [ksqlDB statements](https://docs.confluent.io/current/ksql/docs/developer-guide/syntax-reference.html)
 
 ### [Rideshare](https://github.com/confluentinc/ksqldb-graphql/tree/master/packages/rideshare)
 
