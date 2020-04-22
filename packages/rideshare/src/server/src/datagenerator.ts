@@ -1,11 +1,12 @@
 import { stringify, parse } from 'querystring';
-import { runCommand } from '@ksqldb/graphql';
 import { request } from 'https';
+
+import { runCommand } from '@confluentinc/ksqldb-graphql';
 
 import { ksqlDBOpts } from './index';
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // taken from https://github.com/russau/kafka-websockets/blob/master/_experiments/python/velocity.py
@@ -30,31 +31,31 @@ type Payload = {
 const createStatement = `create table cars (id VARCHAR, lat DOUBLE, long DOUBLE) with (KAFKA_TOPIC='cars', VALUE_FORMAT='JSON', key='id', partitions=1, replicas=1);`;
 const uniqueCars = `create table unique_cars as select ID, count(*) from cars group by id emit changes;`;
 
-
 const getRoute = (route: number): Promise<{ data: string }> => {
-  const payload = stringify({ rId: route })
-  return new Promise(resolve => {
+  const payload = stringify({ rId: route });
+  return new Promise((resolve) => {
     let data = '';
-    const req = request('https://www.gmap-pedometer.com/gp/ajaxRoute/get',
+    const req = request(
+      'https://www.gmap-pedometer.com/gp/ajaxRoute/get',
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Length': Buffer.byteLength(payload)
-        }
-      }, (res) => {
-
-        res.on('data', d => {
+          'Content-Length': Buffer.byteLength(payload),
+        },
+      },
+      (res) => {
+        res.on('data', (d) => {
           data += Buffer.from(d).toString();
-        })
-
-      });
+        });
+      }
+    );
     req.on('close', () => {
-      resolve({ data })
-    })
+      resolve({ data });
+    });
     req.end(payload, 'utf-8');
-  })
-}
+  });
+};
 async function generateData(id: string, route: number): Promise<void> {
   try {
     await runCommand(`${createStatement}${uniqueCars}`, ksqlDBOpts);
@@ -72,11 +73,9 @@ async function generateData(id: string, route: number): Promise<void> {
   const data: Payload = parse(response.data) as Payload;
   const lines = data.polyline.split('a');
   for (let i = 0; i < lines.length; i++) {
-    const command = `insert into cars(id, lat, long) values('${id}', ${
-      parseFloat(
-        lines[i]
-      )
-      }, ${parseFloat(lines[i + 1])}); `;
+    const command = `insert into cars(id, lat, long) values('${id}', ${parseFloat(
+      lines[i]
+    )}, ${parseFloat(lines[i + 1])}); `;
 
     await runCommand(command, ksqlDBOpts);
     console.log(command);
