@@ -28,15 +28,10 @@ def unitTestsStage(buildData, params) {
 def buildJsStage(buildData, params, env) {
     stage('build') {
         if (!buildData.isPrJob && params.PUBLISH_A_RELEASE) {
-            withCredentials([
-                string(credentialsId: 'JENKINS_GITHUB_PERSONAL_ACCESS_TOKEN', variable: 'GH_TOKEN'),
-                string(credentialsId: 'confluent-npm', variable: 'NPM_TOKEN'),
-            ]) {
+            withVaultEnv([["npm/confluent_npm", "token", "NPM_TOKEN"],
+                ["github/confluent_jenkins", "access_token", "GH_TOKEN"]]) {
                 sh "echo '//registry.npmjs.org/:_authToken=${env.NPM_TOKEN}' >> \$HOME/.npmrc"
-
-                sshagent(['ConfluentJenkins Github SSH Key']) {
-                    sh "yarn release --force-publish --create-release=github --yes"
-                }
+                sh "yarn release --force-publish --create-release=github --yes"
             }
         }
     }
@@ -98,13 +93,12 @@ node('docker-node8') {
                         ]
                     ]
                 ]
-                sshagent(['ConfluentJenkins Github SSH Key']) {
-                        sh 'git config --global user.email "jenkins@confluent.io"'
-                        sh 'git config --global user.name "Confluent Jenkins Bot"'
-                        sh 'git checkout $BRANCH_NAME'
-                        sh 'git pull origin $BRANCH_NAME --force'
-                    }
 
+                configureGitSSH("github/confluent_jenkins", "private_key")
+                sh 'git config --global user.email "jenkins@confluent.io"'
+                sh 'git config --global user.name "Confluent Jenkins Bot"'
+                sh 'git checkout $BRANCH_NAME'
+                sh 'git pull origin $BRANCH_NAME --force'
             } else {
                 checkout scm
             }
