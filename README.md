@@ -43,7 +43,7 @@ generateGraphQL({ options }).then(
           Query: queryResolvers,
           Mutation: mutationResolvers,
         }
-      });
+      }),
       subscriptions: {
         keepAlive: 1000,
       },
