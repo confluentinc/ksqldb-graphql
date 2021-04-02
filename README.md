@@ -1,3 +1,5 @@
+ℹ️ *This project is a proof of concept*
+
 # ksqldb-graphql
 GraphQL integration for ksqlDB to facilitate easier app creation by abstracting ksqlDB syntax and protocol.
 
