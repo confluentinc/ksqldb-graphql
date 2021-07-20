@@ -36,7 +36,7 @@ def buildJsStage(buildData, params, env) {
         }
     }
 }
- 
+
 node('docker-debian-10-node') {
 
     def buildData = [
