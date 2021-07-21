@@ -37,7 +37,7 @@ def buildJsStage(buildData, params, env) {
     }
 }
 
-node('docker-node8') {
+node('docker-debian-10-node') {
 
     def buildData = [
         buildStatus: 'Failure',
