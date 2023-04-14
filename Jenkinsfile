@@ -5,6 +5,7 @@ def lintStages(buildData, params) {
         stage('commitlint') {
             if (params.RUN_LINT) {
                 sh 'yarn commitlint --from=origin/$CHANGE_TARGET'
+                sh 'echo hello'
             }
         }
     }
