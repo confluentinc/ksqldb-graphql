@@ -4,7 +4,7 @@
     "target": "es6",
     "moduleResolution": "node",
     "experimentalDecorators": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "baseUrl": "./packages/",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
